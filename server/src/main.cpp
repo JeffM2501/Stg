@@ -4,6 +4,45 @@
 #include <cstdio>
 #include <vector>
 #include <unordered_map>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <deque>
+#include <memory>
+
+template <class T>
+class AtomicQueue : public std::deque<T>
+{
+private:
+	std::mutex Mutex;
+
+public:
+	std::lock_guard<std::mutex> GetLock()
+	{
+		return std::lock_guard<std::mutex>(Mutex);
+    }
+
+	bool Empty()
+	{
+		auto lock = GetLock();
+
+		return Size() == 0;
+	}
+
+	T Pop()
+	{
+		auto lock = GetLock();
+		T val = front();
+		pop_front();
+        return val;
+	}
+
+	void Push(const T& val)
+	{
+		auto lock = GetLock();
+		push_back(val);
+    }
+};
 
 enum class NetworkChannelIDs : uint8_t
 {
@@ -15,7 +54,6 @@ enum class NetworkChannelIDs : uint8_t
 };
 
 static int constexpr MaxClients = 64;
-
 
 enum class ClientState : uint8_t
 {
@@ -31,13 +69,16 @@ enum class ClientState : uint8_t
 struct ConnectedClient
 {
 	ClientState State = ClientState::Unknown;
+
+	AtomicQueue<ENetPacket*> InboundPackets;
+	AtomicQueue<ENetPacket*> OutboundPackets;
 };
 
-std::unordered_map<uint64_t, ConnectedClient> Clients;
+std::unordered_map<uint64_t, std::shared_ptr<ConnectedClient>> Clients;
 
 void HandleNewConnection(ENetPeer* peer)
 {
-	Clients.insert_or_assign(peer->connectID, ConnectedClient());
+	Clients.insert_or_assign(peer->connectID, std::make_shared<ConnectedClient>());
 }
 
 void HandleDestroyConnection(ENetPeer* peer)
@@ -46,8 +87,24 @@ void HandleDestroyConnection(ENetPeer* peer)
 	if (itr == Clients.end())
 		return;
 
-
 	Clients.erase(itr);
+}
+
+void HandlePacketReceive(ENetPeer* peer, ENetPacket* packet, int channelID)
+{
+    printf("A packet of length %lu containing %s was received from %s on channel %u.\n",
+		packet->dataLength,
+		packet->data,
+		peer->data,
+		channelID);
+
+	auto itr = Clients.find(peer->connectID);
+	if (itr == Clients.end())
+	{
+		enet_packet_destroy(packet);
+        return;
+	}
+	itr->second->InboundPackets.Push(packet);
 }
 
 int main()
@@ -89,13 +146,7 @@ int main()
 			break;
 
 		case ENET_EVENT_TYPE_RECEIVE:
-			printf("A packet of length %lu containing %s was received from %s on channel %u.\n",
-				event.packet->dataLength,
-				event.packet->data,
-				event.peer->data,
-				event.channelID);
-			/* Clean up the packet now that we're done using it. */
-			enet_packet_destroy(event.packet);
+			HandlePacketReceive(event.peer, event.packet, event.channelID);
 			break;
 
 		case ENET_EVENT_TYPE_DISCONNECT:
