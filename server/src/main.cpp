@@ -1,48 +1,13 @@
 #define ENET_IMPLEMENTATION
 #include "enet.h"
+#undef ENET_IMPLEMENTATION
 
 #include <cstdio>
-#include <vector>
 #include <unordered_map>
-#include <thread>
-#include <mutex>
-#include <atomic>
-#include <deque>
 #include <memory>
 
-template <class T>
-class AtomicQueue : public std::deque<T>
-{
-private:
-	std::mutex Mutex;
-
-public:
-	std::lock_guard<std::mutex> GetLock()
-	{
-		return std::lock_guard<std::mutex>(Mutex);
-    }
-
-	bool Empty()
-	{
-		auto lock = GetLock();
-
-		return Size() == 0;
-	}
-
-	T Pop()
-	{
-		auto lock = GetLock();
-		T val = front();
-		pop_front();
-        return val;
-	}
-
-	void Push(const T& val)
-	{
-		auto lock = GetLock();
-		push_back(val);
-    }
-};
+#include "AtomicQueue.h"
+#include "ConnectedClient.h"
 
 enum class NetworkChannelIDs : uint8_t
 {
@@ -54,25 +19,6 @@ enum class NetworkChannelIDs : uint8_t
 };
 
 static int constexpr MaxClients = 64;
-
-enum class ClientState : uint8_t
-{
-	Unknown = 0,
-	Negotiating = 1,
-	AssetLimbo = 2,
-	GameLimbo = 3,
-	Playing = 4,
-	Tooling = 5,
-	Admin = 6,
-};
-
-struct ConnectedClient
-{
-	ClientState State = ClientState::Unknown;
-
-	AtomicQueue<ENetPacket*> InboundPackets;
-	AtomicQueue<ENetPacket*> OutboundPackets;
-};
 
 std::unordered_map<uint64_t, std::shared_ptr<ConnectedClient>> Clients;
 
