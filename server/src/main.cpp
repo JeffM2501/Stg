@@ -8,23 +8,36 @@
 
 #include "AtomicQueue.h"
 #include "ConnectedClient.h"
+#include "MessageChannels.h"
 
-enum class NetworkChannelIDs : uint8_t
+#include "Messages.h"
+#include "MessageIDs.h"
+
+class SendClientId : public MessagePackBuffer
 {
-	Control = 0,
-	Chat = 1,
-	Assets = 2,
-	Updates = 3,
-	Count = 4
+public:
+	SendClientId(uint32_t clientId)
+	{
+		AllocatePacket(sizeof(uint32_t));
+		WriteTypeID(MessageIDS::SetClientId);
+    }
+
+	void SetClientId(uint32_t clientId)
+	{
+		WriteValue<uint32_t>(clientId, 0);
+	}
 };
 
 static int constexpr MaxClients = 64;
 
 std::unordered_map<uint64_t, std::shared_ptr<ConnectedClient>> Clients;
 
+using MessageChannelProcessor = std::function<void(ConnectedClient*, ENetPacket*, int)>;
+std::unordered_map<NetworkChannelIDs, MessageChannelProcessor> ChannelProcessors;
+
 void HandleNewConnection(ENetPeer* peer)
 {
-	Clients.insert_or_assign(peer->connectID, std::make_shared<ConnectedClient>());
+	Clients.insert_or_assign(peer->connectID, std::make_shared<ConnectedClient>(ConnectedClient{peer}));
 }
 
 void HandleDestroyConnection(ENetPeer* peer)
@@ -38,12 +51,6 @@ void HandleDestroyConnection(ENetPeer* peer)
 
 void HandlePacketReceive(ENetPeer* peer, ENetPacket* packet, int channelID)
 {
-    printf("A packet of length %lu containing %s was received from %s on channel %u.\n",
-		packet->dataLength,
-		packet->data,
-		peer->data,
-		channelID);
-
 	auto itr = Clients.find(peer->connectID);
 	if (itr == Clients.end())
 	{
@@ -51,6 +58,21 @@ void HandlePacketReceive(ENetPeer* peer, ENetPacket* packet, int channelID)
         return;
 	}
 	itr->second->InboundPackets.Push(packet);
+}
+
+void SendClientMessage(ConnectedClient* client, MessagePackBuffer& message, int channel, bool reliable, bool ordered)
+{ 
+	if (message.Packet == nullptr)
+		return;
+	enet_uint32 flags = 0;
+	if (reliable)
+		flags |= ENET_PACKET_FLAG_RELIABLE;
+	if (!ordered)
+		flags |= ENET_PACKET_FLAG_UNSEQUENCED;
+
+    message.Packet->flags = flags;
+
+    enet_peer_send(client->Peer, channel, message.Packet);
 }
 
 int main()
@@ -78,39 +100,42 @@ int main()
 
 	ENetEvent event;
 
-	/* Wait up to 1000 milliseconds for an event. (WARNING: blocking) */
 	while (true)
 	{
 		enet_host_service(server, &event, 1000);
 		switch (event.type) 
 		{
 		case ENET_EVENT_TYPE_CONNECT:
-			printf("A new client connected from %x:%u.\n", event.peer->address.host, event.peer->address.port);
-			/* Store any relevant client information here. */
 			event.peer->data = "Client information";
 			HandleNewConnection(event.peer);
-			break;
+		break;
 
 		case ENET_EVENT_TYPE_RECEIVE:
-			HandlePacketReceive(event.peer, event.packet, event.channelID);
-			break;
+		{
+            auto itr = ChannelProcessors.find(NetworkChannelIDs(event.channelID));
+			if (itr != ChannelProcessors.end())
+			{
+				itr->second(Clients[event.peer->connectID].get(), event.packet, event.channelID);
+			}
+			else
+			{
+				HandlePacketReceive(event.peer, event.packet, event.channelID);
+			}
+        }
+        break;
 
 		case ENET_EVENT_TYPE_DISCONNECT:
-			printf("%s disconnected.\n", event.peer->data);
-			/* Reset the peer's client information. */
 			event.peer->data = NULL;
 			HandleDestroyConnection(event.peer);
-			break;
+		break;
 
 		case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
-			printf("%s disconnected due to timeout.\n", event.peer->data);
-			/* Reset the peer's client information. */
 			event.peer->data = NULL;
 			HandleDestroyConnection(event.peer);
-			break;
+		break;
 
 		case ENET_EVENT_TYPE_NONE:
-			break;
+		break;
 		}
 	}
 

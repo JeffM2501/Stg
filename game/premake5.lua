@@ -53,8 +53,7 @@ project (workspaceName)
     includedirs { "./" }
     includedirs { "src" }
     includedirs { "include" }
-    includedirs { "../common/include" }
-    
+
     link_raylib()
-    link_to("staticLib")
--- To link to a lib use link_to("LIB_FOLDER_NAME")
+
+    link_to("common")
