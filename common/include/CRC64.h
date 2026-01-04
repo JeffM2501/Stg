@@ -135,7 +135,7 @@ namespace Hashes
     UINT64_C(0x536fa08fdfd90e51), UINT64_C(0x29b7d047efec8728),
     };
 
-    static constexpr uint64_t CRC64(const unsigned char* s, uint64_t l)
+    static constexpr uint64_t CRC64(const char* s, uint64_t l)
     {
         uint64_t crc = 0;
         for (uint64_t j = 0; j < l; j++)
@@ -148,6 +148,6 @@ namespace Hashes
 
     static constexpr uint64_t CRC64Str(std::string_view data)
     {
-        return CRC64((const unsigned char*)(data.data()), data.size());
+        return CRC64(data.data(), data.size());
     }
 }

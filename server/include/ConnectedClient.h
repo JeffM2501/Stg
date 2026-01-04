@@ -36,4 +36,6 @@ public:
 
 	Events::EventSource<ConnectedClient> OnStateChanged;
 	Events::EventSource<ConnectedClient> OnDisconnectd;
+
+    ConnectedClient(ENetPeer* peer = nullptr) : Peer(peer) {}
 };

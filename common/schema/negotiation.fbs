@@ -1,0 +1,6 @@
+namespace ControlMessages; 
+
+table ClientId
+{
+	id : long;
+}

@@ -1,0 +1,1 @@
+..\flatbuffers\bin\flatc --cpp --gen-object-api --reflect-names -o messages schema\negotiation.fbs

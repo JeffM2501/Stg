@@ -67,7 +67,7 @@ public:
         if (offset + sizeof(T) > Packet->dataLength)
             return;
 
-        *(reinterpret_cast<const T*>(Packet->data + offset)) = value;
+        *(reinterpret_cast<T*>(Packet->data + offset)) = value;
     }
 
     void WriteTypeID(size_t messageTypeID)

@@ -37,7 +37,7 @@ std::unordered_map<NetworkChannelIDs, MessageChannelProcessor> ChannelProcessors
 
 void HandleNewConnection(ENetPeer* peer)
 {
-	Clients.insert_or_assign(peer->connectID, std::make_shared<ConnectedClient>(ConnectedClient{peer}));
+	Clients.insert_or_assign(peer->connectID, std::make_shared<ConnectedClient>(peer));
 }
 
 void HandleDestroyConnection(ENetPeer* peer)

@@ -25,6 +25,7 @@ project (baseName)
     vpaths 
     {
         ["Header Files/*"] = { "include/**.h", "include/**.hpp", "**.h", "**.hpp"},
+        ["Message Files/*"] = { "messages/**.h"},
         ["Source Files/*"] = { "src/**.cpp", "src/**.c", "**.cpp","**.c"},
     }
     files {"**.hpp", "**.h", "**.cpp","**.c"}
@@ -32,3 +33,6 @@ project (baseName)
     includedirs { "./" }
     includedirs { "./src" }
     includedirs { "./include" }
+    includedirs { "./messages" }
+
+    includedirs { "../flatbuffers/include/" }
