@@ -32,3 +32,5 @@ project (baseName)
     includedirs { "./" }
     includedirs { "./src" }
     includedirs { "./include" }
+    includedirs { "../protobuffer/include" }
+	include_raylib()

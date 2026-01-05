@@ -24,7 +24,6 @@ project (baseName)
 
     filter "action:vs*"
         debugdir "$(SolutionDir)"
-        defines {"_WINSOCK_DEPRECATED_NO_WARNINGS"}
 
     filter {"action:vs*", "configurations:Release"}
         kind "WindowedApp"
@@ -50,9 +49,12 @@ project (baseName)
 		
     filter{}
 
+  
     includedirs { "./" }
     includedirs { "src" }
     includedirs { "include" }
 
+    link_raylib()
+
     link_to("common")
-	include_raylib()
+	link_to("engine")

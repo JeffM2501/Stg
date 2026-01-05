@@ -1,6 +1,6 @@
-#include "CRC64.h"
+#include "crc64.h"
 
 namespace Hashes
 {
-    
+
 }

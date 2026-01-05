@@ -22,6 +22,12 @@ Use this as a starting point or replace it with your code.
 
 */
 
+#include "resource_database.h"
 
-static constexpr int InitialWidth = 1200;
-static constexpr int InitialHeight = 800;
+namespace ResourceDatabase
+{
+    void Init()
+    {
+
+    }
+}
