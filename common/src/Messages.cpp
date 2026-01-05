@@ -18,6 +18,10 @@ namespace MessageUnpackFactories
         if (itr == Factories.end())
             return nullptr;
 
-        return itr->second(packet);
+        MessageUnpackBufferPtr msg = itr->second(packet);
+        if (msg)
+            msg->MessageTypeId = id;
+
+        return msg;
     }
 }

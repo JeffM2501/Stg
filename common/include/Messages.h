@@ -3,6 +3,7 @@
 #include "enet.h"
 
 #include "message_channels.h"
+#include "message_route_ids.h"
 
 #include <memory>
 #include <functional>
@@ -12,6 +13,7 @@
 class MessageUnpackBuffer
 {
 protected:
+    
     ENetPacket* Packet = nullptr;
 
     uint64_t ReadOffset = 0;
@@ -83,6 +85,9 @@ protected:
     virtual size_t GetStartOffset() const { return 8; }
 
 public:
+    virtual int GetProcessingChannel() { return RouteID::SystemHandler; }
+    uint64_t MessageTypeId = InvalidMessageTypeID;
+
     MessageUnpackBuffer(ENetPacket* packet) : Packet(packet) {}
     virtual  ~MessageUnpackBuffer()
     {

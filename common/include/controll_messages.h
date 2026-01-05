@@ -50,6 +50,8 @@ namespace Unpack
 
         uint32_t ClientId = 0;
 
+        int GetProcessingChannel() override { return RouteID::ControllHandler; }
+
         SendClientId(ENetPacket* packet) : MessageUnpackBuffer(packet)
         {
             Read(ClientId);
@@ -63,6 +65,8 @@ namespace Unpack
 
         float BoundsX = 0;
         float BoundsY = 0;
+
+        int GetProcessingChannel() override { return RouteID::GameHandler; }
 
         WorldInfo(ENetPacket* packet) : MessageUnpackBuffer(packet)
         {

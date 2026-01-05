@@ -8,6 +8,7 @@
 
 #include "atomic_queue.h"
 #include "timed_callbacks.h"
+#include "lifetime_token.h"
 
 #include "connected_client.h"
 #include "message_channels.h"
@@ -16,46 +17,13 @@
 #include "controll_messages.h"
 #include "chat_messages.h"
 
+#include "client_database.h"
+#include "message_router.h"
+#include "chat_system.h"
+
 static int constexpr MaxClients = 64;
 
-std::unordered_map<uint64_t, std::shared_ptr<ConnectedClient>> Clients;
-
-using MessageChannelProcessor = std::function<void(ConnectedClient*, ENetPacket*, int)>;
-std::unordered_map<NetworkChannelIDs, MessageChannelProcessor> ChannelProcessors;
-
 TimedCallbackHost GlobalTimmer;
-
-void HandleNewConnection(ENetPeer* peer)
-{
-	auto client = std::make_shared<ConnectedClient>(peer);
-	peer->data = client.get();
-	Clients.insert_or_assign(peer->connectID, client);
-
-	client->Send<Pack::SendClientId>(client->Peer->connectID);
-	client->Send<Pack::ServerTextMessage>("Welcome Human!");
-
-	client->Send<Pack::WorldInfo>(300, 300);
-}
-
-void HandleDestroyConnection(ENetPeer* peer)
-{
-	auto itr = Clients.find(peer->connectID);
-	if (itr == Clients.end())
-		return;
-
-	Clients.erase(itr);
-}
-
-void HandlePacketReceive(ENetPeer* peer, ENetPacket* packet, int /*channelID*/)
-{
-	auto itr = Clients.find(peer->connectID);
-	if (itr == Clients.end())
-	{
-		enet_packet_destroy(packet);
-		return;
-	}
-	itr->second->InboundPackets.Push(packet);
-}
 
 void SendClientMessage(ConnectedClient* client, MessagePackBuffer& message, int channel, bool reliable, bool ordered)
 {
@@ -72,8 +40,12 @@ void SendClientMessage(ConnectedClient* client, MessagePackBuffer& message, int 
 	enet_peer_send(client->Peer, channel, message.Packet);
 }
 
+Tokens::TokenSource AppTokenSource;
+
 int main()
 {
+	ChatSystem::Init();
+
 	if (enet_initialize() != 0)
 	{
 		printf("An error occurred while initializing ENet.\n");
@@ -95,13 +67,21 @@ int main()
 
 	GlobalTimmer.Add("Heartbeat", 1, [](size_t)
 		{
-			for (auto& [id, client] : Clients)
-			{
-				client->Send<Pack::ServerTextMessage>("Badump", 1);
-			}
+			ClientDB::DoForEachClient([](auto* client)
+				{
+					client->Send<Pack::ServerTextMessage>("Badump", 1);
+				});
 		}, true);
 
 	printf("Started a server...\n");
+
+	ClientDB::OnNewConnection.Add([](void*, auto& client)
+		{
+			client->Send<Pack::SendClientId>(client->Peer->connectID);
+			client->Send<Pack::ServerTextMessage>("Welcome Human!");
+
+			client->Send<Pack::WorldInfo>(300, 300);
+		}, AppTokenSource.GetToken());
 
 	ENetEvent event;
 
@@ -113,49 +93,43 @@ int main()
 		auto delta = now - lastTime;
 		lastTime = now;
 
-		GlobalTimmer.Update(std::chrono::duration_cast<std::chrono::duration<float>>(delta).count());
 
 		enet_host_service(server, &event, 1000);
 		switch (event.type)
 		{
 		case ENET_EVENT_TYPE_CONNECT:
-			HandleNewConnection(event.peer);
+			ClientDB::NewConnection(event.peer);
 			break;
 
 		case ENET_EVENT_TYPE_RECEIVE:
 		{
-			auto itr = ChannelProcessors.find(NetworkChannelIDs(event.channelID));
-			if (itr != ChannelProcessors.end())
-			{
-				itr->second(Clients[event.peer->connectID].get(), event.packet, event.channelID);
-			}
-			else
-			{
-				HandlePacketReceive(event.peer, event.packet, event.channelID);
-			}
+			MessageRouter::PacketReceive(event.peer, event.packet);
 		}
 		break;
 
 		case ENET_EVENT_TYPE_DISCONNECT:
-			HandleDestroyConnection(event.peer);
+			ClientDB::DestroyConnection(event.peer);
 			break;
 
 		case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
-			HandleDestroyConnection(event.peer);
+			ClientDB::DestroyConnection(event.peer);
 			break;
 
 		case ENET_EVENT_TYPE_NONE:
 			break;
 		}
 
-		for (auto& [id, client] : Clients)
+		GlobalTimmer.Update(std::chrono::duration_cast<std::chrono::duration<float>>(delta).count());
+		ChatSystem::Process();
+
+		ClientDB::DoForEachClient([](auto* client)
 		{
 			while (!client->OutboundPackets.Empty())
 			{
 				auto message = client->OutboundPackets.Pop();
-				SendClientMessage(client.get(), *message, int(message->Channel), message->Reliable, message->Ordered);
+				SendClientMessage(client, *message, int(message->Channel), message->Reliable, message->Ordered);
 			}
-		}
+		});
 	}
 
 	enet_host_destroy(server);
