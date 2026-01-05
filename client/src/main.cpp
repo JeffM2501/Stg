@@ -34,7 +34,7 @@ Use this as a starting point or replace it with your code.
 #include "enet.h"
 #undef ENET_IMPLEMENTATION
 
-#include "MessageChannels.h"
+#include "message_channels.h"
 
 #include <string>
 
@@ -93,7 +93,7 @@ void ServiceNetwork()
 void GameInit()
 {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-    InitWindow(InitialWidth, InitialHeight, "STG");
+    InitWindow(1280, 800, "STG");
     SetTargetFPS(144);
 
     enet_initialize();

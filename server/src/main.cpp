@@ -6,12 +6,12 @@
 #include <unordered_map>
 #include <memory>
 
-#include "AtomicQueue.h"
-#include "ConnectedClient.h"
-#include "MessageChannels.h"
+#include "atomic_queue.h"
+#include "connected_client.h"
+#include "message_channels.h"
 
-#include "Messages.h"
-#include "MessageIDs.h"
+#include "messages.h"
+#include "message_ids.h"
 
 class SendClientId : public MessagePackBuffer
 {
@@ -35,12 +35,12 @@ std::unordered_map<uint64_t, std::shared_ptr<ConnectedClient>> Clients;
 using MessageChannelProcessor = std::function<void(ConnectedClient*, ENetPacket*, int)>;
 std::unordered_map<NetworkChannelIDs, MessageChannelProcessor> ChannelProcessors;
 
-void HandleNewConnection(ENetPeer* peer)
+void HandleNewConnection(_ENetPeer* peer)
 {
-	Clients.insert_or_assign(peer->connectID, std::make_shared<ConnectedClient>(ConnectedClient{peer}));
+	Clients.insert_or_assign(peer->connectID, std::make_shared<ConnectedClient>(peer));
 }
 
-void HandleDestroyConnection(ENetPeer* peer)
+void HandleDestroyConnection(_ENetPeer* peer)
 {
 	auto itr = Clients.find(peer->connectID);
 	if (itr == Clients.end())
@@ -49,7 +49,7 @@ void HandleDestroyConnection(ENetPeer* peer)
 	Clients.erase(itr);
 }
 
-void HandlePacketReceive(ENetPeer* peer, ENetPacket* packet, int channelID)
+void HandlePacketReceive(_ENetPeer* peer, ENetPacket* packet, int channelID)
 {
 	auto itr = Clients.find(peer->connectID);
 	if (itr == Clients.end())
@@ -106,7 +106,7 @@ int main()
 		switch (event.type) 
 		{
 		case ENET_EVENT_TYPE_CONNECT:
-			event.peer->data = "Client information";
+			//event.peer->data = "Client information";
 			HandleNewConnection(event.peer);
 		break;
 

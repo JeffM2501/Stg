@@ -148,6 +148,12 @@ namespace Hashes
 
     static constexpr uint64_t CRC64Str(std::string_view data)
     {
-        return CRC64((const unsigned char*)(data.data()), data.size());
+        uint64_t crc = 0;
+        for (uint64_t j = 0; j < data.length(); j++)
+        {
+            uint8_t byte = data.data()[j];
+            crc = crc64_tab[(uint8_t)crc ^ byte] ^ (crc >> 8);
+        }
+        return crc;
     }
 }
