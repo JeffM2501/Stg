@@ -57,3 +57,4 @@ project (baseName)
     link_raylib()
 
     link_to("common")
+    link_to("engine")

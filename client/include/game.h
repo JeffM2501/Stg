@@ -4,23 +4,23 @@
 
 enum class GameStage
 {
-    None,
-    Init,
-    MainMenu,
-    Connecting,
-    InGame,
-    Exiting
+	None,
+	Init,
+	MainMenu,
+	Connecting,
+	InGame,
+	Exiting
 };
 
 namespace GameStageManager
 {
-    extern Events::EventSource<GameStage> OnStageChanged;
+	extern Events::EventSource<GameStage> OnStageChanged;
 
-    void SetStage(GameStage newStage);
-    GameStage GetCurrentStage();
+	void SetStage(GameStage newStage);
+	GameStage GetCurrentStage();
 
-    void ApplyPendingStage();
+	void ApplyPendingStage();
 
-    void Quit();
-    bool WantExit();
+	void Quit();
+	bool WantExit();
 }

@@ -43,11 +43,11 @@ public:
     template<class T, typename... Args>
     void Send(Args&&... args)
     {
-        auto message = CreateMessage<T>(std::forward<Args>(args)...);
+        std::shared_ptr<MessagePackBuffer> message = CreateMessage<T>(std::forward<Args>(args)...);
         OutboundPackets.Push(message);
     }
 
-    void Send(std::shared_ptr<MessagePackBuffer>&& message)
+    void Send(std::shared_ptr<MessagePackBuffer>& message)
     {
         OutboundPackets.Push(message);
     }
