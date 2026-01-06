@@ -78,7 +78,6 @@ int main()
 	ClientDB::OnNewConnection.Add([](void*, auto& client)
 		{
 			client->Send<Pack::SendClientId>(client->Peer->connectID);
-			client->Send<Pack::ServerTextMessage>("Welcome Human!");
 
 			client->Send<Pack::WorldInfo>(300, 300);
 		}, AppTokenSource.GetToken());
@@ -93,7 +92,6 @@ int main()
 		auto delta = now - lastTime;
 		lastTime = now;
 
-
 		enet_host_service(server, &event, 1000);
 		switch (event.type)
 		{
@@ -102,9 +100,7 @@ int main()
 			break;
 
 		case ENET_EVENT_TYPE_RECEIVE:
-		{
 			MessageRouter::PacketReceive(event.peer, event.packet);
-		}
 		break;
 
 		case ENET_EVENT_TYPE_DISCONNECT:

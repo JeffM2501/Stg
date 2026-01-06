@@ -8,30 +8,31 @@ namespace Pack
     class ServerAddChatUser : public MessagePackBuffer
     {
 	public:
-		ServerAddChatUser(uint64_t userId, std::string_view userName)
+		ServerAddChatUser(uint32_t userId, std::string_view userName)
 		{
 			Channel = NetworkChannelIDs::Chat;
-			AllocatePacket(GetBufferWriteSize(userName.size()) + sizeof(uint64_t));
+			AllocatePacket(GetBufferWriteSize(userName.size()) + sizeof(uint32_t));
 			WriteTypeID(MessageIDS::ServerAddChatUser);
 			SetUserId(userId);
 			SetUserName(userName);
 		}
 
-		void SetUserId(uint64_t id)
+		void SetUserId(uint32_t id)
 		{
-			WriteValue<uint64_t>(id, 0);
+			WriteValue<uint32_t>(id, 0);
 		}
 
 		void SetUserName(std::string_view userName)
 		{
-			WriteBufferValue(userName.data(), userName.size(), 4);
+			WriteBufferValue(userName.data(), userName.size(), 
+				4);
 		}
     };
 
 	class ServerRemoveChatUser : public MessagePackBuffer
 	{
 	public:
-		ServerRemoveChatUser(uint64_t userId)
+		ServerRemoveChatUser(uint32_t userId)
 		{
 			Channel = NetworkChannelIDs::Chat;
 			AllocatePacket(sizeof(uint64_t));
@@ -39,9 +40,9 @@ namespace Pack
 			SetUserId(userId);
 		}
 
-		void SetUserId(uint64_t id)
+		void SetUserId(uint32_t id)
 		{
-			WriteValue<uint64_t>(id, 0);
+			WriteValue<uint32_t>(id, 0);
 		}
 	};
 
@@ -80,7 +81,7 @@ namespace Unpack
 
 		int GetProcessingChannel() override { return RouteID::ChatHandler; }
 
-        uint64_t UserID = 0;
+        uint32_t UserID = 0;
 		std::string_view Name;
 
         ServerAddChatUser(ENetPacket* packet) : MessageUnpackBuffer(packet)

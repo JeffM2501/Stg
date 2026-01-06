@@ -147,6 +147,10 @@ void OnStageChanged(void* sender, const GameStage& stage)
 				DrawText("GameStage::InGame", 10, 40, 20, BLACK);
 				DrawText(TextFormat("Connected to server %u", Connection::GetClientId()), 10, 10, 20, GREEN);
 
+				auto user = ChatClient::GetUserFromId(Connection::GetClientId());
+				if (user)
+					DrawText(TextFormat("Player Name: %s", user->Name.data()), 10, 60, 20, GRAY);
+
 				int y = 370;
 				for (const auto& msg : ChatClient::GetChatLog())
 				{

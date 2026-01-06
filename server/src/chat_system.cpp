@@ -14,14 +14,14 @@
 #include <random>
 #include <chrono>
 
+
 namespace ChatSystem
 {
 	static Tokens::TokenSource ChatLifetimeToken;
 
 	std::vector<std::string> NameParts;
 
-	auto RandSeed = std::chrono::system_clock::now().time_since_epoch().count();
-	std::mt19937 RandEngine(RandSeed);
+	std::mt19937 RandEngine(uint32_t(std::chrono::system_clock::now().time_since_epoch().count()));
 
 	std::string_view GetRandomName()
 	{
@@ -34,7 +34,8 @@ namespace ChatSystem
 		NameParts = {
 			"Red", "Blue", "Green", "Yellow", "Fast", "Slow", "Happy", "Sad",
 			"Cat", "Dog", "Bird", "Fish", "Lion", "Tiger", "Bear", "Wolf",
-			"Sky", "Ocean", "Mountain", "River", "Forest", "Desert", "Cloud", "Star"
+			"Sky", "Ocean", "Mountain", "River", "Forest", "Desert", "Cloud", "Star",
+			"Underpants", "Gnome", "Thunder", "Flare"
 		};
 	}
 
@@ -44,16 +45,16 @@ namespace ChatSystem
 		std::string Name;
 	};
 
-	std::unordered_map<uint64_t, ClientChatInfo> ClientChatInfos;
+	std::unordered_map<uint32_t, ClientChatInfo> ClientChatInfos;
 
-	uint64_t FindClientIdByName(const std::string& name)
+	uint32_t FindClientIdByName(const std::string& name)
 	{
 		for (const auto& [id, info] : ClientChatInfos)
 		{
 			if (info.Name == name)
 				return id;
 		}
-		return uint64_t(-1);
+		return uint32_t(-1);
 	}
 
 	std::string GenerateGuestName()
@@ -68,7 +69,7 @@ namespace ChatSystem
 			name += GetRandomName();
 			name += std::to_string(GuestCounter++);
 
-		} while (FindClientIdByName(name) != uint64_t(-1));
+		} while (FindClientIdByName(name) != uint32_t(-1));
 		return name;
 	}
 
@@ -99,6 +100,9 @@ namespace ChatSystem
 			{
 				other->Send<Pack::ServerAddChatUser>(newClient.Client->Peer->connectID, newClient.Name);
 			});
+
+		std::string welcomeMessage = "Welcome " + newClient.Name;
+		client->Send<Pack::ServerTextMessage>(welcomeMessage.c_str());
 	}
 
 	void DestroyConnection(void* sender, ConnectedClient* client)
