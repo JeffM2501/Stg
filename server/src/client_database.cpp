@@ -14,10 +14,13 @@ namespace ClientDB
 
 	void NewConnection(ENetPeer* peer)
 	{
-		std::lock_guard<std::mutex> lock(ClientsMutex);
 		auto client = std::make_shared<ConnectedClient>(peer);
-		peer->data = client.get();
-		Clients.insert_or_assign(peer->connectID, client);
+		{
+			std::lock_guard<std::mutex> lock(ClientsMutex);
+		
+			peer->data = client.get();
+			Clients.insert_or_assign(peer->connectID, client);
+		}
 		OnNewConnection.Invoke(nullptr, client.get());
 	}
 

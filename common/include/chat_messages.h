@@ -21,6 +21,11 @@ namespace Pack
 		{
 			WriteValue<uint64_t>(id, 0);
 		}
+
+		void SetUserName(std::string_view userName)
+		{
+			WriteBufferValue(userName.data(), userName.size(), 4);
+		}
     };
 
 	class ServerRemoveChatUser : public MessagePackBuffer

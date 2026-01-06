@@ -29,12 +29,12 @@ namespace Connection
 	Events::EventSource<uint32_t> OnConnected;
 	Events::EventSource<uint32_t> OnConnectionComplete;
 
-	std::vector<std::string> ServerChat;
-
-	std::span<std::string> GetServerChat()
-	{
-		return std::span<std::string>(ServerChat);
-	}
+// 	std::vector<std::string> ServerChat;
+// 
+// 	std::span<std::string> GetServerChat()
+// 	{
+// 		return std::span<std::string>(ServerChat);
+// 	}
 
 	std::unordered_map<size_t, std::unique_ptr<MessageHandler>> MessageHandlers;
 
@@ -46,14 +46,14 @@ namespace Connection
 				OnConnectionComplete.Invoke(nullptr, ClientId);
 			};
 
-		RegisterHandler<Unpack::ServerTextMessage>().ProcessFunc = [](const Unpack::ServerTextMessage& message)
-			{
-				auto sender = message.SenderId;
-				if (sender == 0)
-					ServerChat.push_back(std::string("[Server]: ") + std::string(message.Message));
-				else
-					ServerChat.push_back(std::string("[Other]: ") + std::string(message.Message));
-			};
+// 		RegisterHandler<Unpack::ServerTextMessage>().ProcessFunc = [](const Unpack::ServerTextMessage& message)
+// 			{
+// 				auto sender = message.SenderId;
+// 				if (sender == 0)
+// 					ServerChat.push_back(std::string("[Server]: ") + std::string(message.Message));
+// 				else
+// 					ServerChat.push_back(std::string("[Other]: ") + std::string(message.Message));
+// 			};
 	}
 
 	void Init()

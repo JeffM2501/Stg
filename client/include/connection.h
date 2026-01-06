@@ -53,7 +53,7 @@ namespace Connection
 	void ServiceNetwork();
 
 	uint32_t GetClientId();
-	std::span<std::string> GetServerChat();
+/*	std::span<std::string> GetServerChat();*/
 
 	extern Events::EventSource<uint32_t> OnConnected;
 	extern Events::EventSource<uint32_t> OnConnectionComplete;

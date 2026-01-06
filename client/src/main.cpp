@@ -6,6 +6,7 @@
 #include "engine_core.h"
 
 #include "connection.h"
+#include "chat_client.h"
 
 using namespace EngineCore;
 
@@ -17,6 +18,7 @@ void GameInit()
 	InitWindow(1280, 800, "STG");
 	SetTargetFPS(144);
 
+	ChatClient::Init();
 	EngineCore::Init();
 	Connection::Init();
 
@@ -38,6 +40,7 @@ void GameCleanup()
 bool GameUpdate()
 {
 	Connection::ServiceNetwork();
+	ChatClient::Process();
 
 	if (GameScene)
 	{
@@ -145,9 +148,18 @@ void OnStageChanged(void* sender, const GameStage& stage)
 				DrawText(TextFormat("Connected to server %u", Connection::GetClientId()), 10, 10, 20, GREEN);
 
 				int y = 370;
-				for (const auto& msg : Connection::GetServerChat())
+				for (const auto& msg : ChatClient::GetChatLog())
 				{
-					DrawText(msg.c_str(), 10, y, 20, BLACK);
+					std::string text;
+					auto* user = ChatClient::GetUserFromId(msg.SenderId);
+					if (!user)
+						text += "[server]:";
+					else
+						text += "[" + user->Name + "]:";
+
+					text += msg.Message;
+
+					DrawText(text.c_str(), 10, y, 20, BLACK);
 					y += 30;
 				}
 			});
