@@ -3,10 +3,7 @@
 #undef ENET_IMPLEMENTATION
 
 #include <cstdio>
-#include <unordered_map>
-#include <memory>
 
-#include "atomic_queue.h"
 #include "timed_callbacks.h"
 #include "lifetime_token.h"
 
@@ -101,7 +98,7 @@ int main()
 
 		case ENET_EVENT_TYPE_RECEIVE:
 			MessageRouter::PacketReceive(event.peer, event.packet);
-		break;
+			break;
 
 		case ENET_EVENT_TYPE_DISCONNECT:
 			ClientDB::DestroyConnection(event.peer);
@@ -119,13 +116,13 @@ int main()
 		ChatSystem::Process();
 
 		ClientDB::DoForEachClient([](auto* client)
-		{
-			while (!client->OutboundPackets.Empty())
 			{
-				auto message = client->OutboundPackets.Pop();
-				SendClientMessage(client, *message, int(message->Channel), message->Reliable, message->Ordered);
-			}
-		});
+				while (!client->OutboundPackets.Empty())
+				{
+					auto message = client->OutboundPackets.Pop();
+					SendClientMessage(client, *message, int(message->Channel), message->Reliable, message->Ordered);
+				}
+			});
 	}
 
 	enet_host_destroy(server);
