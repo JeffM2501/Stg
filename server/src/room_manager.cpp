@@ -13,6 +13,7 @@ namespace RoomManager
 	{
 		// Implementation for routing gameplay messages
 	}
+
 	void Init()
 	{
 		MessageRouter::RegisterRouteHandler(RouteID::GameHandler, RouteGameplayMessage);
@@ -49,7 +50,7 @@ namespace RoomManager
 			if (DefaultRoom && client)
 			{
 				// send a transfer message
-				// set them to the inital state
+				// set them to the initial state
 				DefaultRoom->Players.insert_or_assign(id, client);
 			}
 		}

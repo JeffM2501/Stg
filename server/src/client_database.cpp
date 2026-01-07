@@ -3,10 +3,22 @@
 #include <memory>
 #include <mutex>
 
+void ConnectedClient::SetState(ClientState state)
+{
+	ClientDB::OnClientStateChanged.Invoke(this, this);
+	State = state;
+}
+
+ClientState ConnectedClient::GetState()
+{
+	return State;
+}
+
 namespace ClientDB
 {
 	Events::EventSource<ConnectedClient*> OnNewConnection;
 	Events::EventSource<ConnectedClient*> OnDestroyConnection;
+	Events::EventSource<ConnectedClient*> OnClientStateChanged;
 
 	std::unordered_map<uint64_t, std::shared_ptr<ConnectedClient>> Clients;
 

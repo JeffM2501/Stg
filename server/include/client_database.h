@@ -11,6 +11,8 @@ namespace ClientDB
 	extern Events::EventSource<ConnectedClient*> OnNewConnection;
 	extern Events::EventSource<ConnectedClient*> OnDestroyConnection;
 
+    extern Events::EventSource<ConnectedClient*> OnClientStateChanged;
+
 	void NewConnection(ENetPeer* peer);
 	void DestroyConnection(ENetPeer* peer);
 

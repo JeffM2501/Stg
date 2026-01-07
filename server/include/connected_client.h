@@ -25,15 +25,14 @@ struct ConnectedClient
 {
 private:
     Tokens::TokenSource TokenSource;
+
+    ClientState State = ClientState::Unknown;
 public:
     Tokens::LifetimeTokenPtr GetToken() { return TokenSource.GetToken(); }
 
     ENetPeer* Peer = nullptr;
 
     ConnectedClient(ENetPeer* peer) : Peer(peer) {}
-
-    ClientState State = ClientState::Unknown;
-
     AtomicQueue<ENetPacket*> InboundPackets;
     AtomicQueue<std::shared_ptr<MessagePackBuffer>> OutboundPackets;
 
@@ -57,4 +56,7 @@ public:
     {
         return std::make_shared<T>(std::forward<Args>(args)...);
     }
+
+    void SetState(ClientState state);
+    ClientState GetState();
 };
