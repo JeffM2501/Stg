@@ -25,7 +25,7 @@ namespace ChatSystem
 
 	std::string_view GetRandomName()
 	{
-		std::uniform_int_distribution<size_t> dist(0, NameParts.size()-1);
+		std::uniform_int_distribution<size_t> dist(0, NameParts.size() - 1);
 		return NameParts[dist(RandEngine)];
 	}
 
@@ -43,9 +43,28 @@ namespace ChatSystem
 	{
 		ConnectedClient* Client;
 		std::string Name;
+		std::set<size_t> JoinedGroups;
 	};
 
 	std::unordered_map<uint32_t, ClientChatInfo> ClientChatInfos;
+
+	struct ChatGroup
+	{
+	public:
+		std::string Name;
+		std::vector<ClientChatInfo*> Members;
+	};
+
+	std::mutex GroupsMutex;
+	std::unordered_map<size_t, ChatGroup> ChatGroups;
+
+	ClientChatInfo* GetChatInfo(ConnectedClient* client)
+	{
+		auto itr = ClientChatInfos.find(client->Peer->connectID);
+		if (itr == ClientChatInfos.end())
+			return nullptr;
+		return &itr->second;
+	}
 
 	uint32_t FindClientIdByName(const std::string& name)
 	{
@@ -101,8 +120,9 @@ namespace ChatSystem
 				other->Send<Pack::ServerAddChatUser>(newClient.Client->Peer->connectID, newClient.Name);
 			});
 
-		std::string welcomeMessage = "Welcome " + newClient.Name;
-		client->Send<Pack::ServerTextMessage>(welcomeMessage.c_str());
+		SendServerMessage("Welcome " + newClient.Name, client);
+
+		client->SetState(ClientState::AssetLimbo);
 	}
 
 	void DestroyConnection(void* sender, ConnectedClient* client)
@@ -110,6 +130,11 @@ namespace ChatSystem
 		auto itr = ClientChatInfos.find(client->Peer->connectID);
 		if (itr == ClientChatInfos.end())
 			return;
+
+		for (auto id : itr->second.JoinedGroups)
+		{
+			RemoveUserFromGroup(client, id);
+		}
 
 		auto id = itr->first;
 		ClientChatInfos.erase(itr);
@@ -134,5 +159,90 @@ namespace ChatSystem
 	void Process()
 	{
 		// any automated or outbound processing
+	}
+
+	size_t CreateChatGroup(std::string_view groupName)
+	{
+		std::lock_guard<std::mutex> lock(GroupsMutex);
+
+		size_t id = std::hash<std::string_view>{}(groupName);
+
+		if (ChatGroups.find(id) != ChatGroups.end())
+		{
+			// already exists
+			return id;
+		}
+
+		ChatGroup newGroup;
+		newGroup.Name = groupName;
+		ChatGroups.insert_or_assign(id, std::move(newGroup));
+		return id;
+	}
+
+	void DestroyChatGroup(size_t groupID)
+	{
+		std::lock_guard<std::mutex> lock(GroupsMutex);
+		ChatGroups.erase(groupID);
+	}
+
+	void AddUserToGroup(ConnectedClient* client, size_t groupID)
+	{
+		auto chatClient = GetChatInfo(client);
+
+		if (!chatClient)
+			return;
+
+		std::lock_guard<std::mutex> lock(GroupsMutex);
+		auto itr = ChatGroups.find(groupID);
+		if (itr == ChatGroups.end())
+			return;
+		itr->second.Members.push_back(chatClient);
+	}
+
+	void RemoveUserFromGroup(ConnectedClient* client, size_t groupID)
+	{
+		auto chatClient = GetChatInfo(client);
+
+		if (!chatClient)
+			return;
+
+		std::lock_guard<std::mutex> lock(GroupsMutex);
+		auto itr = ChatGroups.find(groupID);
+		if (itr == ChatGroups.end())
+			return;
+		auto& members = itr->second.Members;
+		auto memItr = std::find(members.begin(), members.end(), client);
+		if (memItr != members.end())
+		{
+			members.erase(memItr);
+		}
+
+		chatClient->JoinedGroups.erase(groupID);
+	}
+
+	void SendServerMessage(std::string_view message, ConnectedClient* target)
+	{
+		if (target == nullptr)
+		{
+			for (auto [id, clientInfo] : ClientChatInfos)
+			{
+				clientInfo.Client->Send<Pack::ServerTextMessage>(message.data());
+			}
+			return;
+		}
+
+		target->Send<Pack::ServerTextMessage>(message.data());
+	}
+
+	void SendServerMessage(std::string_view message, size_t groupID)
+	{
+		auto itr = ChatGroups.find(groupID);
+		if (itr == ChatGroups.end())
+			return;
+
+		for (auto member : itr->second.Members)
+		{
+			member->Client->Send<Pack::ServerTextMessage>(message.data());
+		}
 	}
 }

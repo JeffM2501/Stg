@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <mutex>
+#include <atomic>
 
 enum class ClientState : uint8_t
 {
@@ -26,11 +27,16 @@ struct ConnectedClient
 private:
     Tokens::TokenSource TokenSource;
 
-    ClientState State = ClientState::Unknown;
+    std::atomic<ClientState> State = ClientState::Unknown;
+
+    std::mutex ClientLock;
+
 public:
     Tokens::LifetimeTokenPtr GetToken() { return TokenSource.GetToken(); }
 
     ENetPeer* Peer = nullptr;
+
+	std::atomic<size_t> CurrentRoomID = 0;
 
     ConnectedClient(ENetPeer* peer) : Peer(peer) {}
     AtomicQueue<ENetPacket*> InboundPackets;

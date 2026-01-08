@@ -5,13 +5,13 @@
 
 void ConnectedClient::SetState(ClientState state)
 {
+	State.store(state);
 	ClientDB::OnClientStateChanged.Invoke(this, this);
-	State = state;
 }
 
 ClientState ConnectedClient::GetState()
 {
-	return State;
+	return State.load();
 }
 
 namespace ClientDB
