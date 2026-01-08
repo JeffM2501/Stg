@@ -15,7 +15,8 @@ public:
 
 	std::unordered_map<uint32_t, ConnectedClient*> Players;
 
-	Room(size_t id, std::string_view name) : ID(id), Name(name) {}
+	Room(size_t id, std::string_view name);
+	~Room();
 };
 
 namespace RoomManager

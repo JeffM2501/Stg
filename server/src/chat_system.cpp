@@ -201,7 +201,7 @@ namespace ChatSystem
 
 	void RemoveUserFromGroup(ConnectedClient* client, size_t groupID)
 	{
-		auto chatClient = GetChatInfo(client);
+		auto* chatClient = GetChatInfo(client);
 
 		if (!chatClient)
 			return;
@@ -211,7 +211,7 @@ namespace ChatSystem
 		if (itr == ChatGroups.end())
 			return;
 		auto& members = itr->second.Members;
-		auto memItr = std::find(members.begin(), members.end(), client);
+		auto memItr = std::find(members.begin(), members.end(), chatClient);
 		if (memItr != members.end())
 		{
 			members.erase(memItr);

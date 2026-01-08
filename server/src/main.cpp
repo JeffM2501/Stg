@@ -66,7 +66,7 @@ int main()
 		{
 			ClientDB::DoForEachClient([](auto* client)
 				{
-					client->Send<Pack::ServerTextMessage>("Badump", 1);
+					ChatSystem::SendServerMessage("Badump");
 				});
 		}, true);
 

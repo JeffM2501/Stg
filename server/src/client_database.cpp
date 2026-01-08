@@ -38,15 +38,20 @@ namespace ClientDB
 
 	void DestroyConnection(ENetPeer* peer)
 	{
-		std::lock_guard<std::mutex> lock(ClientsMutex);
+		std::shared_ptr<ConnectedClient> client;
+		{
+			std::lock_guard<std::mutex> lock(ClientsMutex);
 
-		std::unordered_map<uint64_t, std::shared_ptr<ConnectedClient>>::iterator itr = Clients.find(peer->connectID);
-		if (itr == Clients.end())
-			return;
+			std::unordered_map<uint64_t, std::shared_ptr<ConnectedClient>>::iterator itr = Clients.find(peer->connectID);
+			if (itr == Clients.end())
+				return;
 
-		OnDestroyConnection.Invoke(nullptr, itr->second.get());
+			client = itr->second;
+			Clients.erase(itr);
+		}
 
-		Clients.erase(itr);
+		if (client)
+			OnDestroyConnection.Invoke(nullptr, client.get());
 	}
 
 	ConnectedClient* GetClient(ENetPeer* peer)

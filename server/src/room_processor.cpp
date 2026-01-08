@@ -13,6 +13,11 @@ Room::Room(size_t id, std::string_view name)
 	ChatGroupId = ChatSystem::CreateChatGroup(name);
 }
 
+Room::~Room()
+{
+	ChatSystem::DestroyChatGroup(ChatGroupId);
+}
+
 namespace RoomProcessor
 {
 	void AddPlayer(Room* room, ConnectedClient* player)
