@@ -119,10 +119,15 @@ namespace Unpack
 
         uint32_t SenderId = 0;
         std::string_view Message;
+		bool IsPrivate = false;
 
         ServerTextMessage(ENetPacket* packet) : MessageUnpackBuffer(packet)
         {
             Read(SenderId);
+			uint8_t temp = 0;
+			Read(temp);
+			IsPrivate = temp != 0;
+
             Read(Message);
         }
     };
