@@ -24,8 +24,7 @@ namespace Pack
 
 		void SetUserName(std::string_view userName)
 		{
-			WriteBufferValue(userName.data(), userName.size(), 
-				4);
+			WriteBufferValue(userName.data(), userName.size(), 4);
 		}
     };
 
@@ -49,26 +48,31 @@ namespace Pack
     class ServerTextMessage : public MessagePackBuffer
     {
     public:
-        ServerTextMessage(std::string_view message, uint32_t senderId = 0)
+        ServerTextMessage(std::string_view message, uint32_t senderId = 0, bool isPrivate = false)
         {
             Channel = NetworkChannelIDs::Chat;
-            AllocatePacket(GetBufferWriteSize(message.size()) + sizeof(uint32_t));
+            AllocatePacket(GetBufferWriteSize(message.size()) + sizeof(uint32_t) + sizeof(uint8_t));
             WriteTypeID(MessageIDS::ServerTextMessage);
 
             SetSenderId(senderId);
             SetMessage(message);
+			SetIsPrivate(isPrivate);
         }
 
-        void SetSenderId(uint32_t id)
-        {
-            WriteValue<uint32_t>(id, 0);
-        }
+		void SetSenderId(uint32_t id)
+		{
+			WriteValue<uint32_t>(id, 0);
+		}
 
-    private:
         void SetMessage(std::string_view message)
         {
-            WriteBufferValue(message.data(), message.size(), 4);
+            WriteBufferValue(message.data(), message.size(), 5);
         }
+
+		void SetIsPrivate(bool isPrivate)
+		{
+			WriteValue<uint8_t>(isPrivate ? 1 : 0, 4);
+		}
     };
 }
 

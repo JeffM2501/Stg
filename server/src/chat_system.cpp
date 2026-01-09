@@ -44,6 +44,8 @@ namespace ChatSystem
 		ConnectedClient* Client;
 		std::string Name;
 		std::set<size_t> JoinedGroups;
+
+		std::set<size_t> KnownUsers;
 	};
 
 	std::unordered_map<uint32_t, ClientChatInfo> ClientChatInfos;
@@ -114,11 +116,8 @@ namespace ChatSystem
 		newClient.Name = GenerateGuestName();
 		ClientChatInfos.insert_or_assign(client->Peer->connectID, newClient);
 
-		// tell everyone the name
-		ClientDB::DoForEachClient([&newClient](ConnectedClient* other)
-			{
-				other->Send<Pack::ServerAddChatUser>(newClient.Client->Peer->connectID, newClient.Name);
-			});
+		// tell them the name
+		client->Send<Pack::ServerAddChatUser>(newClient.Client->Peer->connectID, newClient.Name);
 
 		SendServerMessage("Welcome " + newClient.Name, client);
 
@@ -196,7 +195,20 @@ namespace ChatSystem
 		auto itr = ChatGroups.find(groupID);
 		if (itr == ChatGroups.end())
 			return;
-		itr->second.Members.push_back(chatClient);
+
+		auto& group = itr->second;
+		group.Members.push_back(chatClient);
+		
+		for (auto& member : group.Members)
+		{
+			// tell them about everyone in the chat
+			client->Send<Pack::ServerAddChatUser>(member->Client->Peer->connectID, member->Name);
+			chatClient->KnownUsers.insert(member->Client->Peer->connectID);
+
+			// tell everyone in the chat about them
+			member->Client->Send<Pack::ServerAddChatUser>(client->Peer->connectID, chatClient->Name);
+			member->KnownUsers.insert(chatClient->Client->Peer->connectID);
+		}
 	}
 
 	void RemoveUserFromGroup(ConnectedClient* client, size_t groupID)
