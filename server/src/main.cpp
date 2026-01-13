@@ -12,7 +12,7 @@
 
 #include "messages.h"
 #include "controll_messages.h"
-#include "chat_messages.h"
+#include "messages/chat_group_messages.h"
 
 #include "client_database.h"
 #include "message_router.h"

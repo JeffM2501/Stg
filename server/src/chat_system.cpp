@@ -4,7 +4,9 @@
 #include "message_route_ids.h"
 #include "message_router.h"
 
-#include "chat_messages.h"
+
+#include "messages/chat_group_messages.h"
+#include "messages/chat_messages.h"
 
 #include "lifetime_token.h"
 
@@ -43,9 +45,9 @@ namespace ChatSystem
 	{
 		ConnectedClient* Client;
 		std::string Name;
-		std::set<size_t> JoinedGroups;
+		std::set<uint32_t> JoinedGroups;
 
-		std::set<size_t> KnownUsers;
+		std::set<uint32_t> KnownUsers;
 	};
 
 	std::unordered_map<uint32_t, ClientChatInfo> ClientChatInfos;
@@ -58,7 +60,7 @@ namespace ChatSystem
 	};
 
 	std::mutex GroupsMutex;
-	std::unordered_map<size_t, ChatGroup> ChatGroups;
+	std::unordered_map<uint32_t, ChatGroup> ChatGroups;
 
 	ClientChatInfo* GetChatInfo(ConnectedClient* client)
 	{
@@ -94,7 +96,7 @@ namespace ChatSystem
 		return name;
 	}
 
-	void ProcessChatMessage(ConnectedClient& sender, Unpack::ServerTextMessage* message)
+	void ProcessChatMessage(ConnectedClient& sender, ChatMessages::ServerTextMessage* message)
 	{
 		// route to everyone else in the channel
 	}
@@ -104,7 +106,7 @@ namespace ChatSystem
 		switch (buffer->MessageTypeId)
 		{
 		case MessageIDS::ServerTextMessage:
-			ProcessChatMessage(*client, static_cast<Unpack::ServerTextMessage*>(buffer.get()));
+			ProcessChatMessage(*client, static_cast<ChatMessages::ServerTextMessage*>(buffer.get()));
 			break;
 		}
 	}
@@ -160,31 +162,27 @@ namespace ChatSystem
 		// any automated or outbound processing
 	}
 
-	size_t CreateChatGroup(std::string_view groupName)
+	static uint32_t LastGroupId = 0;
+
+	uint32_t CreateChatGroup(std::string_view groupName)
 	{
+		LastGroupId++;
+
 		std::lock_guard<std::mutex> lock(GroupsMutex);
-
-		size_t id = std::hash<std::string_view>{}(groupName);
-
-		if (ChatGroups.find(id) != ChatGroups.end())
-		{
-			// already exists
-			return id;
-		}
 
 		ChatGroup newGroup;
 		newGroup.Name = groupName;
-		ChatGroups.insert_or_assign(id, std::move(newGroup));
-		return id;
+		ChatGroups.insert_or_assign(LastGroupId, std::move(newGroup));
+		return LastGroupId;
 	}
 
-	void DestroyChatGroup(size_t groupID)
+	void DestroyChatGroup(uint32_t groupID)
 	{
 		std::lock_guard<std::mutex> lock(GroupsMutex);
 		ChatGroups.erase(groupID);
 	}
 
-	void AddUserToGroup(ConnectedClient* client, size_t groupID)
+	void AddUserToGroup(ConnectedClient* client, uint32_t groupID)
 	{
 		auto chatClient = GetChatInfo(client);
 
@@ -198,20 +196,23 @@ namespace ChatSystem
 
 		auto& group = itr->second;
 		group.Members.push_back(chatClient);
+
+		// tell them about the group
+		client->Send<Pack::SetChatGroupInfo>(groupID, group.Name);
 		
 		for (auto& member : group.Members)
 		{
 			// tell them about everyone in the chat
-			client->Send<Pack::ServerAddChatUser>(member->Client->Peer->connectID, member->Name);
+			client->Send<ChatGroupMessages::ServerAddChatUser>(member->Client->Peer->connectID, member->Name);
 			chatClient->KnownUsers.insert(member->Client->Peer->connectID);
 
 			// tell everyone in the chat about them
-			member->Client->Send<Pack::ServerAddChatUser>(client->Peer->connectID, chatClient->Name);
+			member->Client->Send<ChatGroupMessages::ServerAddChatUser>(client->Peer->connectID, chatClient->Name);
 			member->KnownUsers.insert(chatClient->Client->Peer->connectID);
 		}
 	}
 
-	void RemoveUserFromGroup(ConnectedClient* client, size_t groupID)
+	void RemoveUserFromGroup(ConnectedClient* client, uint32_t groupID)
 	{
 		auto* chatClient = GetChatInfo(client);
 
@@ -223,6 +224,12 @@ namespace ChatSystem
 		if (itr == ChatGroups.end())
 			return;
 		auto& members = itr->second.Members;
+
+		for (auto member : members)
+		{
+			member->Client->Send<ChatGroupMessages::ServerRemoveChatUser>(client->Peer->connectID, groupID);
+		}
+
 		auto memItr = std::find(members.begin(), members.end(), chatClient);
 		if (memItr != members.end())
 		{
@@ -246,7 +253,7 @@ namespace ChatSystem
 		target->Send<Pack::ServerTextMessage>(message.data());
 	}
 
-	void SendServerMessage(std::string_view message, size_t groupID)
+	void SendServerMessage(std::string_view message, uint32_t groupID)
 	{
 		auto itr = ChatGroups.find(groupID);
 		if (itr == ChatGroups.end())

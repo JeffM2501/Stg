@@ -1,0 +1,11 @@
+namespace ChatMessages
+
+message ServerTextMessage
+{
+    [channel] Chat
+    [handler] ChatHandler
+    u32 SenderID = 0;
+    u32 GroupID = 0;
+    bool IsPrivate = false;
+    string Message;
+}

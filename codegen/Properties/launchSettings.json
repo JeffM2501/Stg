@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "codegen": {
+      "commandName": "Project",
+      "commandLineArgs": "c++ C:\\Users\\jeffm\\Desktop\\Stg2\\common\\schemas\r\nC:\\Users\\jeffm\\Desktop\\Stg2\\common\\messages"
+    }
+  }
+}

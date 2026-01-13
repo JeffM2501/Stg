@@ -14,7 +14,8 @@
 /*#include "world_info.h"*/
 
 #include "controll_messages.h"
-#include "chat_messages.h"
+
+#include "messages/chat_group_messages.h"
 
 #include <unordered_map>
 

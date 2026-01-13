@@ -18,7 +18,7 @@ protected:
 
     uint64_t ReadOffset = 0;
 
-    std::span<uint8_t> ReadBuffer(size_t offset)
+    std::span<uint8_t> ReadBuffer(size_t offset) const
     {
         offset += GetStartOffset();
 
@@ -36,8 +36,30 @@ protected:
         return std::span<uint8_t>(Packet->data + offset, size);
     }
 
+    size_t ReadBufferSize(size_t offset) const
+    {
+        offset += GetStartOffset();
+
+        if (Packet == nullptr || Packet->data == nullptr || offset >= Packet->dataLength)
+            return 0;
+
+        uint32_t size = sizeof(uint32_t);
+
+        if (offset + size > Packet->dataLength)
+            return 0;
+
+        size = *(reinterpret_cast<const uint32_t*>(Packet->data + offset));
+        return size + sizeof(uint32_t);
+    }
+
+    std::string_view ReadString(size_t offset)const
+    {
+        auto range = ReadBuffer(offset);
+        return std::string_view((char*)(range.data()), range.size());
+    }
+
     template<class T>
-    const T* ReadValue(size_t offset)
+    const T* ReadValue(size_t offset) const
     {
         offset += GetStartOffset();
 

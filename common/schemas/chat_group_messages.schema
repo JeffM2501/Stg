@@ -1,0 +1,35 @@
+namespace ChatGroupMessages
+
+message ServerAddChatUser
+{
+    [channel] Chat
+    [handler] ChatHandler
+    u32 UserID;
+    u32 GroupID = 0;
+    string UserName;
+}
+
+message ServerRemoveChatUser
+{
+    [channel] Chat
+    [handler] ChatHandler
+    u32 UserID;
+    u32 GroupID = 0;
+}
+
+message ServerSetChatGroup
+{
+    [channel] Chat
+    [handler] ChatHandler
+    u32 GroupId;
+    bool IsPrivate = false;
+    string Name;
+}
+
+message TestMessage
+{
+    [channel] Chat
+    [handler] ChatHandler
+    string StringValue;
+    u32 IntValue = 0;
+}

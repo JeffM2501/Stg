@@ -9,12 +9,12 @@ namespace ChatSystem
 	void Init();
 	void Process();
 
-	size_t CreateChatGroup(std::string_view groupName);
-	void DestroyChatGroup(size_t groupID);
+	uint32_t CreateChatGroup(std::string_view groupName);
+	void DestroyChatGroup(uint32_t groupID);
 
-	void AddUserToGroup(ConnectedClient* client, size_t groupID);
-	void RemoveUserFromGroup(ConnectedClient* client, size_t groupID);
+	void AddUserToGroup(ConnectedClient* client, uint32_t groupID);
+	void RemoveUserFromGroup(ConnectedClient* client, uint32_t groupID);
 
 	void SendServerMessage(std::string_view message, ConnectedClient* target = nullptr);
-	void SendServerMessage(std::string_view message, size_t channelID);
+	void SendServerMessage(std::string_view message, uint32_t channelID);
 }
