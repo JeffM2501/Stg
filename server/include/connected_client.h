@@ -36,11 +36,11 @@ public:
 
     ENetPeer* Peer = nullptr;
 
-	std::atomic<size_t> CurrentRoomID = 0;
+	std::atomic<uint32_t> CurrentRoomID = 0;
 
     ConnectedClient(ENetPeer* peer) : Peer(peer) {}
     AtomicQueue<ENetPacket*> InboundPackets;
-    AtomicQueue<std::shared_ptr<MessagePackBuffer>> OutboundPackets;
+    AtomicQueue<std::shared_ptr<MessageBuffer>> OutboundPackets;
 
     Events::EventSource<ConnectedClient> OnStateChanged;
     Events::EventSource<ConnectedClient> OnDisconnectd;
@@ -48,11 +48,11 @@ public:
     template<class T, typename... Args>
     void Send(Args&&... args)
     {
-        std::shared_ptr<MessagePackBuffer> message = CreateMessage<T>(std::forward<Args>(args)...);
+        std::shared_ptr<MessageBuffer> message = CreateMessage<T>(std::forward<Args>(args)...);
         OutboundPackets.Push(message);
     }
 
-    void Send(std::shared_ptr<MessagePackBuffer>& message)
+    void Send(std::shared_ptr<MessageBuffer>& message)
     {
         OutboundPackets.Push(message);
     }

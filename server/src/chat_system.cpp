@@ -101,7 +101,7 @@ namespace ChatSystem
 		// route to everyone else in the channel
 	}
 
-	void RouteMessage(ConnectedClient* client, std::unique_ptr<MessageUnpackBuffer> buffer)
+	void RouteMessage(ConnectedClient* client, std::unique_ptr<MessageBuffer> buffer)
 	{
 		switch (buffer->MessageTypeId)
 		{
@@ -119,7 +119,7 @@ namespace ChatSystem
 		ClientChatInfos.insert_or_assign(client->Peer->connectID, newClient);
 
 		// tell them the name
-		client->Send<Pack::ServerAddChatUser>(newClient.Client->Peer->connectID, newClient.Name);
+		client->Send<ChatGroupMessages::ServerAddChatUser>(newClient.Client->Peer->connectID, newClient.Name);
 
 		SendServerMessage("Welcome " + newClient.Name, client);
 
@@ -143,7 +143,7 @@ namespace ChatSystem
 		// tell everyone who left
 		ClientDB::DoForEachClient([id](ConnectedClient* other)
 			{
-				other->Send<Pack::ServerRemoveChatUser>(id);
+				other->Send<ChatGroupMessages::ServerRemoveChatUser>(id);
 			});
 	}
 
@@ -198,7 +198,7 @@ namespace ChatSystem
 		group.Members.push_back(chatClient);
 
 		// tell them about the group
-		client->Send<Pack::SetChatGroupInfo>(groupID, group.Name);
+		client->Send<ChatGroupMessages::ServerSetChatGroup>(groupID, group.Name);
 		
 		for (auto& member : group.Members)
 		{
@@ -245,12 +245,12 @@ namespace ChatSystem
 		{
 			for (auto [id, clientInfo] : ClientChatInfos)
 			{
-				clientInfo.Client->Send<Pack::ServerTextMessage>(message.data());
+				clientInfo.Client->Send<ChatMessages::ServerTextMessage>(message.data());
 			}
 			return;
 		}
 
-		target->Send<Pack::ServerTextMessage>(message.data());
+		target->Send<ChatMessages::ServerTextMessage>(message.data());
 	}
 
 	void SendServerMessage(std::string_view message, uint32_t groupID)
@@ -261,7 +261,7 @@ namespace ChatSystem
 
 		for (auto member : itr->second.Members)
 		{
-			member->Client->Send<Pack::ServerTextMessage>(message.data());
+			member->Client->Send<ChatMessages::ServerTextMessage>(message.data());
 		}
 	}
 }

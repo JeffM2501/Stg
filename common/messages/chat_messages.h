@@ -5,11 +5,11 @@
 
 namespace ChatMessages
 {
-	class ServerTextMessage :public  MessagePackBuffer, MessageUnpackBuffer
+	class ServerTextMessage :public MessageBuffer
 	{
 	public:
 		DECLARE_MESSAGE_ID(MessageIDS::ServerTextMessage);
-		ServerTextMessage(std::string_view message, uint32_t senderID = 0, uint32_t groupID = 0, bool isPrivate = false) : MessageUnpackBuffer(nullptr)
+		ServerTextMessage(std::string_view message, uint32_t senderID = 0, uint32_t groupID = 0, bool isPrivate = false) : MessageBuffer(nullptr)
 		{
 			Channel = NetworkChannelIDs::Chat;
 			AllocatePacket(sizeof(uint32_t) + sizeof(uint32_t) + sizeof(bool) + GetBufferWriteSize(message.size()));
@@ -31,7 +31,7 @@ namespace ChatMessages
 			SetMessage(message);
 		}
 
-		ServerTextMessage(ENetPacket* packet) : MessageUnpackBuffer(packet)
+		ServerTextMessage(ENetPacket* packet) : MessageBuffer(packet)
 		{
 			Channel = NetworkChannelIDs::Chat;
 

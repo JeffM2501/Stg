@@ -2,7 +2,7 @@
 
 namespace MessageRouter
 {
-	using RouteMap = std::unordered_map<int, std::function<void(ConnectedClient* client, std::unique_ptr<MessageUnpackBuffer> buffer)>>;
+	using RouteMap = std::unordered_map<int, std::function<void(ConnectedClient* client, std::unique_ptr<MessageBuffer> buffer)>>;
 
 	static RouteMap RouteHandlers;
 	void PacketReceive(ENetPeer* peer, ENetPacket* packet)
@@ -13,7 +13,7 @@ namespace MessageRouter
 			enet_packet_destroy(packet);
 			return;
 		}
-		std::unique_ptr<MessageUnpackBuffer> buffer = MessageUnpackFactories::Unpack(packet);
+		std::unique_ptr<MessageBuffer> buffer = MessageFactories::Unpack(packet);
 
 		if (buffer == nullptr)
 		{
@@ -36,7 +36,7 @@ namespace MessageRouter
 		itr->second(client, std::move(buffer));
 	}
 
-	void RegisterRouteHandler(int handlerId, std::function<void(ConnectedClient* client, std::unique_ptr<MessageUnpackBuffer> buffer)> func)
+	void RegisterRouteHandler(int handlerId, std::function<void(ConnectedClient* client, std::unique_ptr<MessageBuffer> buffer)> func)
 	{
 		RouteHandlers.insert_or_assign(handlerId, func);
 	}

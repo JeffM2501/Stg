@@ -9,5 +9,5 @@
 namespace MessageRouter
 {
 	void PacketReceive(ENetPeer* peer, ENetPacket* packet);
-	void RegisterRouteHandler(int handlerId, std::function<void(ConnectedClient* client, std::unique_ptr<MessageUnpackBuffer> buffer)> func);
+	void RegisterRouteHandler(int handlerId, std::function<void(ConnectedClient* client, std::unique_ptr<MessageBuffer> buffer)> func);
 }

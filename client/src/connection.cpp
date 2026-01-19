@@ -41,9 +41,9 @@ namespace Connection
 
 	void RegisterDefaultHandlers()
 	{
-		RegisterHandler<Unpack::SendClientId>().ProcessFunc = [](const Unpack::SendClientId& message)
+		RegisterHandler<ControlMessages::SendClientId>().ProcessFunc = [](const ControlMessages::SendClientId& message)
 			{
-				ClientId = message.ClientId;
+				ClientId = message.ClientID();
 				OnConnectionComplete.Invoke(nullptr, ClientId);
 			};
 

@@ -22,7 +22,7 @@ static int constexpr MaxClients = 64;
 
 TimedCallbackHost GlobalTimmer;
 
-void SendClientMessage(ConnectedClient* client, MessagePackBuffer& message, int channel, bool reliable, bool ordered)
+void SendClientMessage(ConnectedClient* client, MessageBuffer& message, int channel, bool reliable, bool ordered)
 {
 	if (message.Packet == nullptr)
 		return;
@@ -74,9 +74,9 @@ int main()
 
 	ClientDB::OnNewConnection.Add([](void*, auto& client)
 		{
-			client->Send<Pack::SendClientId>(client->Peer->connectID);
+			client->Send<ControlMessages::SendClientId>(client->Peer->connectID);
 
-			client->Send<Pack::WorldInfo>(300, 300);
+			//client->Send<Pack::WorldInfo>(300, 300);
 		}, AppTokenSource.GetToken());
 
 	ENetEvent event;

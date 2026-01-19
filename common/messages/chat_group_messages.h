@@ -5,11 +5,11 @@
 
 namespace ChatGroupMessages
 {
-	class ServerAddChatUser :public  MessagePackBuffer, MessageUnpackBuffer
+	class ServerAddChatUser :public MessageBuffer
 	{
 	public:
 		DECLARE_MESSAGE_ID(MessageIDS::ServerAddChatUser);
-		ServerAddChatUser(uint32_t userID, std::string_view userName, uint32_t groupID = 0) : MessageUnpackBuffer(nullptr)
+		ServerAddChatUser(uint32_t userID, std::string_view userName, uint32_t groupID = 0) : MessageBuffer(nullptr)
 		{
 			Channel = NetworkChannelIDs::Chat;
 			AllocatePacket(sizeof(uint32_t) + sizeof(uint32_t) + GetBufferWriteSize(userName.size()));
@@ -28,7 +28,7 @@ namespace ChatGroupMessages
 			SetUserName(userName);
 		}
 
-		ServerAddChatUser(ENetPacket* packet) : MessageUnpackBuffer(packet)
+		ServerAddChatUser(ENetPacket* packet) : MessageBuffer(packet)
 		{
 			Channel = NetworkChannelIDs::Chat;
 
@@ -57,11 +57,11 @@ namespace ChatGroupMessages
 		void SetUserName(std::string_view value) { WriteBufferValue(value.data(), value.size(), UserNameOffset); }
 	};
 
-	class ServerRemoveChatUser :public  MessagePackBuffer, MessageUnpackBuffer
+	class ServerRemoveChatUser :public  MessageBuffer
 	{
 	public:
 		DECLARE_MESSAGE_ID(MessageIDS::ServerRemoveChatUser);
-		ServerRemoveChatUser(uint32_t userID, uint32_t groupID = 0) : MessageUnpackBuffer(nullptr)
+		ServerRemoveChatUser(uint32_t userID, uint32_t groupID = 0) : MessageBuffer(nullptr)
 		{
 			Channel = NetworkChannelIDs::Chat;
 			AllocatePacket(sizeof(uint32_t) + sizeof(uint32_t));
@@ -77,7 +77,7 @@ namespace ChatGroupMessages
 			SetGroupID(groupID);
 		}
 
-		ServerRemoveChatUser(ENetPacket* packet) : MessageUnpackBuffer(packet)
+		ServerRemoveChatUser(ENetPacket* packet) : MessageBuffer(packet)
 		{
 			Channel = NetworkChannelIDs::Chat;
 
@@ -100,11 +100,11 @@ namespace ChatGroupMessages
 		void SetGroupID(uint32_t value) { WriteValue<uint32_t>(value, GroupIDOffset); }
 	};
 
-	class ServerSetChatGroup :public  MessagePackBuffer, MessageUnpackBuffer
+	class ServerSetChatGroup :public  MessageBuffer
 	{
 	public:
 		DECLARE_MESSAGE_ID(MessageIDS::ServerSetChatGroup);
-		ServerSetChatGroup(uint32_t groupId, std::string_view name, bool isPrivate = false) : MessageUnpackBuffer(nullptr)
+		ServerSetChatGroup(uint32_t groupId, std::string_view name, bool isPrivate = false) : MessageBuffer(nullptr)
 		{
 			Channel = NetworkChannelIDs::Chat;
 			AllocatePacket(sizeof(uint32_t) + sizeof(bool) + GetBufferWriteSize(name.size()));
@@ -123,7 +123,7 @@ namespace ChatGroupMessages
 			SetName(name);
 		}
 
-		ServerSetChatGroup(ENetPacket* packet) : MessageUnpackBuffer(packet)
+		ServerSetChatGroup(ENetPacket* packet) : MessageBuffer(packet)
 		{
 			Channel = NetworkChannelIDs::Chat;
 
@@ -152,11 +152,11 @@ namespace ChatGroupMessages
 		void SetName(std::string_view value) { WriteBufferValue(value.data(), value.size(), NameOffset); }
 	};
 
-	class TestMessage :public  MessagePackBuffer, MessageUnpackBuffer
+	class TestMessage :public  MessageBuffer
 	{
 	public:
 		DECLARE_MESSAGE_ID(MessageIDS::TestMessage);
-		TestMessage(std::string_view stringValue, uint32_t intValue = 0) : MessageUnpackBuffer(nullptr)
+		TestMessage(std::string_view stringValue, uint32_t intValue = 0) : MessageBuffer(nullptr)
 		{
 			Channel = NetworkChannelIDs::Chat;
 			AllocatePacket(GetBufferWriteSize(stringValue.size()) + sizeof(uint32_t));
@@ -172,7 +172,7 @@ namespace ChatGroupMessages
 			SetIntValue(intValue);
 		}
 
-		TestMessage(ENetPacket* packet) : MessageUnpackBuffer(packet)
+		TestMessage(ENetPacket* packet) : MessageBuffer(packet)
 		{
 			Channel = NetworkChannelIDs::Chat;
 

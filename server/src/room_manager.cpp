@@ -10,13 +10,13 @@
 namespace RoomManager
 {
 	Room* DefaultRoom = nullptr;
-	std::unordered_map<size_t, std::unique_ptr<Room>> Rooms;
+	std::unordered_map<uint32_t, std::unique_ptr<Room>> Rooms;
 
-	size_t LastRoomID = 0;
+	uint32_t LastRoomID = 0;
 
 	static Tokens::TokenSource RoomManagerLifetimeToken;
 
-	void RouteGameplayMessage(ConnectedClient* sender, std::unique_ptr<MessageUnpackBuffer> buffer)
+	void RouteGameplayMessage(ConnectedClient* sender, std::unique_ptr<MessageBuffer> buffer)
 	{
 		if (!sender)
 			return;
@@ -62,7 +62,7 @@ namespace RoomManager
 		return ptr;
 	}
 
-	Room* GetRoom(size_t id)
+	Room* GetRoom(uint32_t id)
 	{
 		auto itr = Rooms.find(id);
 		if (itr == Rooms.end())
@@ -81,7 +81,7 @@ namespace RoomManager
 		return nullptr;
 	}
 
-	void DestroyRoom(size_t id)
+	void DestroyRoom(uint32_t id)
 	{
 		Room* room = GetRoom(id);
 		if (!room)

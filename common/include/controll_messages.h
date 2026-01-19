@@ -3,25 +3,45 @@
 #include "messages.h"
 #include "message_ids.h"
 
-namespace Pack
+namespace ControlMessages
 {
-    class SendClientId : public MessagePackBuffer
+    class SendClientId :public  MessageBuffer
     {
     public:
-        SendClientId(uint32_t clientId)
+        DECLARE_MESSAGE_ID(MessageIDS::SetClientId);
+        SendClientId(uint32_t clientId) : MessageBuffer(nullptr)
         {
             Channel = NetworkChannelIDs::Control;
             AllocatePacket(sizeof(uint32_t));
+
+            size_t offset = 0;
+            ClientIDOffset = offset;
+            offset += sizeof(uint32_t);
+
             WriteTypeID(MessageIDS::SetClientId);
-            SetClientId(clientId);
+            SetClientID(clientId);
         }
 
-        void SetClientId(uint32_t clientId)
+        SendClientId(ENetPacket* packet) : MessageBuffer(packet)
         {
-            WriteValue<uint32_t>(clientId, 0);
-        }
-    };
+            Channel = NetworkChannelIDs::Chat;
 
+            size_t offset = 0;
+            ClientIDOffset = offset;
+            offset += sizeof(uint32_t);
+        }
+
+        int GetProcessingChannel() override { return RouteID::ControllHandler; }
+
+        size_t ClientIDOffset = 0;
+
+        uint32_t ClientID() const { return *ReadValue<uint32_t>(ClientIDOffset); }
+        void SetClientID(uint32_t value) { WriteValue<uint32_t>(value, ClientIDOffset); }
+    };
+}
+
+namespace Pack
+{
     class WorldInfo : public MessagePackBuffer
     {
     public:

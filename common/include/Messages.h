@@ -249,7 +249,6 @@ class MessageBuffer
 {
 protected:
     bool DisposePointer = false;
-    ENetPacket* Packet = nullptr;
 
     uint64_t ReadOffset = 0;
 
@@ -342,6 +341,9 @@ protected:
     virtual size_t GetStartOffset() const { return 8; }
 
 public:
+    NetworkChannelIDs Channel = NetworkChannelIDs::Control;
+    ENetPacket* Packet = nullptr;
+
     virtual int GetProcessingChannel() { return RouteID::SystemHandler; }
     uint64_t MessageTypeId = InvalidMessageTypeID;
 
@@ -471,3 +473,12 @@ public:
         *(reinterpret_cast<size_t*>(Packet->data)) = messageTypeID;
     }
 };
+
+namespace MessageFactories
+{
+    using MessageBufferPtr = std::unique_ptr<MessageBuffer>;
+    using MessageBufferFactory = std::function<MessageBufferPtr(ENetPacket*)>;
+
+    void RegisterFactory(uint64_t messageTypeID, MessageBufferFactory factory);
+    MessageBufferPtr Unpack(ENetPacket* packet);
+}

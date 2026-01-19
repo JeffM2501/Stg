@@ -3,6 +3,7 @@
 #include "connection.h"
 
 #include "messages/chat_group_messages.h"
+#include "messages/chat_messages.h"
 
 #include <vector>
 #include <unordered_map>
@@ -27,10 +28,10 @@ namespace ChatClient
 			itr->second.Active = false;
 	}
 
-	void HandleServerTextMessageUser(const Unpack::ServerTextMessage& message)
+	void HandleServerTextMessageUser(const ChatMessages::ServerTextMessage& message)
 	{
 		ChatMessage chatItem;
-		chatItem.SenderId = message.SenderId();
+		chatItem.SenderId = message.SenderID();
 		chatItem.Message = message.Message();
 
 		// filter?
@@ -42,7 +43,7 @@ namespace ChatClient
 	{
 		Connection::RegisterHandler<ChatGroupMessages::ServerAddChatUser>().ProcessFunc = HandleServerAddChatUser;
 		Connection::RegisterHandler<ChatGroupMessages::ServerRemoveChatUser>().ProcessFunc = HandleServerRemoveChatUser;
-		Connection::RegisterHandler<Unpack::ServerTextMessage>().ProcessFunc = HandleServerTextMessageUser;
+		Connection::RegisterHandler<ChatMessages::ServerTextMessage>().ProcessFunc = HandleServerTextMessageUser;
 	}
 
 	void Process()

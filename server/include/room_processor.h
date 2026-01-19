@@ -11,5 +11,5 @@ namespace RoomProcessor
 	void AddPlayer(Room* room, ConnectedClient* player);
 	void RemovePlayer(Room* room, ConnectedClient* player);
 
-	void ProcessMessage(Room* room, ConnectedClient* sender, std::unique_ptr<MessageUnpackBuffer> buffer);
+	void ProcessMessage(Room* room, ConnectedClient* sender, std::unique_ptr<MessageBuffer> buffer);
 }

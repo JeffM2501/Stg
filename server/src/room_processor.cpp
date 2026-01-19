@@ -6,7 +6,7 @@
 
 using namespace RoomManager;
 
-Room::Room(size_t id, std::string_view name) 
+Room::Room(uint32_t id, std::string_view name) 
 	: ID(id)
 	, Name(name)
 {
@@ -33,7 +33,7 @@ namespace RoomProcessor
 		// send leave room message to other players
 	}
 
-	void ProcessMessage(Room* room, ConnectedClient* sender, std::unique_ptr<MessageUnpackBuffer> buffer)
+	void ProcessMessage(Room* room, ConnectedClient* sender, std::unique_ptr<MessageBuffer> buffer)
 	{
 
 	}
