@@ -21,8 +21,8 @@ namespace MessageRouter
 			return;
 		}
 
-		uint64_t messageTypeID = MessageUnpackBuffer::GetMessageTypeID(packet);
-		if (messageTypeID == MessageUnpackBuffer::InvalidMessageTypeID)
+		uint64_t messageTypeID = MessageBuffer::GetMessageTypeID(packet);
+		if (messageTypeID == MessageBuffer::InvalidMessageTypeID)
 		{
 			enet_packet_destroy(packet);
 			return;

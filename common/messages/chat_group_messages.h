@@ -57,7 +57,7 @@ namespace ChatGroupMessages
 		void SetUserName(std::string_view value) { WriteBufferValue(value.data(), value.size(), UserNameOffset); }
 	};
 
-	class ServerRemoveChatUser :public  MessageBuffer
+	class ServerRemoveChatUser :public MessageBuffer
 	{
 	public:
 		DECLARE_MESSAGE_ID(MessageIDS::ServerRemoveChatUser);
@@ -100,7 +100,7 @@ namespace ChatGroupMessages
 		void SetGroupID(uint32_t value) { WriteValue<uint32_t>(value, GroupIDOffset); }
 	};
 
-	class ServerSetChatGroup :public  MessageBuffer
+	class ServerSetChatGroup :public MessageBuffer
 	{
 	public:
 		DECLARE_MESSAGE_ID(MessageIDS::ServerSetChatGroup);
@@ -152,7 +152,7 @@ namespace ChatGroupMessages
 		void SetName(std::string_view value) { WriteBufferValue(value.data(), value.size(), NameOffset); }
 	};
 
-	class TestMessage :public  MessageBuffer
+	class TestMessage :public MessageBuffer
 	{
 	public:
 		DECLARE_MESSAGE_ID(MessageIDS::TestMessage);

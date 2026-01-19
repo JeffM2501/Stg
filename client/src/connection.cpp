@@ -13,7 +13,7 @@
 
 /*#include "world_info.h"*/
 
-#include "controll_messages.h"
+#include "messages/control_messages.h"
 
 #include "messages/chat_group_messages.h"
 
@@ -116,7 +116,7 @@ namespace Connection
 
 			case ENET_EVENT_TYPE_RECEIVE:
 			{
-				size_t messageTypeID = MessageUnpackBuffer::GetMessageTypeID(event.packet);
+				size_t messageTypeID = MessageBuffer::GetMessageTypeID(event.packet);
 				auto handlerItr = MessageHandlers.find(messageTypeID);
 				if (handlerItr != MessageHandlers.end())
 				{

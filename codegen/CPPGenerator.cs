@@ -93,7 +93,7 @@ namespace codegen
                 if (classInfo.ClassType == "message")
                 {
                     // class
-                    textWriter.WriteLine("\tclass " + classInfo.Name + " :public  MessagePackBuffer, MessageUnpackBuffer");
+                    textWriter.WriteLine("\tclass " + classInfo.Name + " :public MessageBuffer");
                     textWriter.WriteLine("\t{");
                     textWriter.WriteLine("\tpublic:");
                     textWriter.WriteLine("\t\tDECLARE_MESSAGE_ID(MessageIDS::" + classInfo.Name + ");");
@@ -127,7 +127,7 @@ namespace codegen
                             first = false;
                         }
                     }
-                    textWriter.WriteLine(") : MessageUnpackBuffer(nullptr)");
+                    textWriter.WriteLine(") : MessageBuffer(nullptr)");
 
                     textWriter.WriteLine("\t\t{");
                     if (classInfo.Metadata.ContainsKey("[channel]"))
@@ -169,7 +169,7 @@ namespace codegen
 
                     // read constructor
                     textWriter.WriteLine();
-                    textWriter.WriteLine("\t\t" + classInfo.Name + "(ENetPacket* packet) : MessageUnpackBuffer(packet)");
+                    textWriter.WriteLine("\t\t" + classInfo.Name + "(ENetPacket* packet) : MessageBuffer(packet)");
                     textWriter.WriteLine("\t\t{");
                     if (classInfo.Metadata.ContainsKey("[channel]"))
                         textWriter.WriteLine("\t\t\tChannel = NetworkChannelIDs::" + classInfo.Metadata["[channel]"] + ";");

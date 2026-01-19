@@ -4,7 +4,7 @@
 
 namespace MessageIDS
 {
-    static constexpr uint64_t SetClientId = Hashes::CRC64Str("SetClientId");
+    static constexpr uint64_t SendClientId = Hashes::CRC64Str("SendClientId");
     static constexpr uint64_t ServerTextMessage = Hashes::CRC64Str("ServerTextMessage");
     static constexpr uint64_t ServerAddChatUser = Hashes::CRC64Str("ServerAddChatUser");
 	static constexpr uint64_t ServerRemoveChatUser = Hashes::CRC64Str("ServerRemoveChatUser");

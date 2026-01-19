@@ -11,7 +11,7 @@
 #include "message_channels.h"
 
 #include "messages.h"
-#include "controll_messages.h"
+#include "messages/control_messages.h"
 #include "messages/chat_group_messages.h"
 
 #include "client_database.h"
