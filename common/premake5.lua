@@ -26,8 +26,23 @@ project (baseName)
     {
         ["Header Files/*"] = { "include/**.h", "include/**.hpp", "**.h", "**.hpp"},
         ["Source Files/*"] = { "src/**.cpp", "src/**.c", "**.cpp","**.c"},
+        ["Schema Files/*"] = { "Schema/**.schema"},
     }
     files {"**.hpp", "**.h", "**.cpp","**.c"}
+    
+    filter {"action:vs*"}
+        files {"**.schema"}
+
+    filter {"action:vs*", "files:**.schema"}
+    buildmessage 'Generating Header for Schema %[%{file.relpath}]'
+    -- One or more commands to run (required)
+    buildcommands {
+      '$(SolutionDir)codegen\bin\debug\net10.0\codegen.exe c++ $(SolutionDir)common\schemas  $(SolutionDir)common\messages'
+      }
+
+    -- One or more outputs resulting from the build (required)
+    buildoutputs { '$(SolutionDir)common\messages\%(Filename).h' }
+    filter {}
 
     includedirs { "./" }
     includedirs { "./src" }
