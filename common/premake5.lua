@@ -32,16 +32,19 @@ project (baseName)
     
     filter {"action:vs*"}
         files {"**.schema"}
-
+    dependson('codegen')
+	
     filter {"action:vs*", "files:**.schema"}
     buildmessage 'Generating Header for Schema %[%{file.relpath}]'
     -- One or more commands to run (required)
-    buildcommands {
-      '$(SolutionDir)codegen\bin\debug\net10.0\codegen.exe c++ $(SolutionDir)common\schemas  $(SolutionDir)common\messages'
-      }
+    -- buildcommands '../codegen/bin/debug/net10.0/codegen.exe c++ $(SolutionDir)common/schemas $(SolutionDir)common/messages'
+	
+	buildcommands {
+      '../codegen/bin/debug/net10.0/codegen.exe -cpp "%[%{!cfg.objdir}/%{file.basename}.schema]" "../common/messages/]"'
+   }
 
     -- One or more outputs resulting from the build (required)
-    buildoutputs { '$(SolutionDir)common\messages\%(Filename).h' }
+    buildoutputs { '%[%{!cfg.objdir}/%{file.basename}.h' }
     filter {}
 
     includedirs { "./" }
