@@ -1,0 +1,8 @@
+namespace ControlMessages
+
+message SendClientId
+{
+    [channel] Control
+    [handler] ControllHandler
+    u32 ClientID = 0;
+}
