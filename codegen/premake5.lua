@@ -34,11 +34,10 @@ project (baseName)
     filter {}
 
     location "./"
-    targetdir "../bin/%{cfg.buildcfg}"
-    files {"**.cs"}
+    targetdir "../tool/"
+    files {"*.cs"}
 
-     entrypoint "codegen.Program"  -- Specify the class with Main method
-
+    entrypoint "codegen.Program"  -- Specify the class with Main method
 
     links {
         "System",
