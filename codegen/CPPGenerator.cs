@@ -77,8 +77,19 @@ namespace codegen
 
             if (hasMessages)
             {
-                textWriter.WriteLine("#include \"messages.h\"");
-                textWriter.WriteLine("#include \"message_ids.h\"");
+                textWriter.WriteLine("#include \"messages.h\""); 
+                textWriter.WriteLine("#include \"crc64.h\"");
+                textWriter.WriteLine();
+                textWriter.WriteLine("namespace MessageIDS");
+                textWriter.WriteLine("{");
+                foreach (var classInfo in classes)
+                {
+                    if (classInfo.ClassType != "message")
+                        continue;
+                    textWriter.WriteLine("\tstatic const uint64_t " + classInfo.Name + " = Hashes::CRC64Str(\"" + classInfo.Name + "\");");
+                }
+                textWriter.WriteLine("}");
+
                 textWriter.WriteLine();
             }
 

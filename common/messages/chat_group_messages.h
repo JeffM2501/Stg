@@ -1,7 +1,15 @@
 #pragma once
 
 #include "messages.h"
-#include "message_ids.h"
+#include "crc64.h"
+
+namespace MessageIDS
+{
+	static const uint64_t ServerAddChatUser = Hashes::CRC64Str("ServerAddChatUser");
+	static const uint64_t ServerRemoveChatUser = Hashes::CRC64Str("ServerRemoveChatUser");
+	static const uint64_t ServerSetChatGroup = Hashes::CRC64Str("ServerSetChatGroup");
+	static const uint64_t TestMessage = Hashes::CRC64Str("TestMessage");
+}
 
 namespace ChatGroupMessages
 {

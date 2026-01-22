@@ -1,7 +1,12 @@
 #pragma once
 
 #include "messages.h"
-#include "message_ids.h"
+#include "crc64.h"
+
+namespace MessageIDS
+{
+	static const uint64_t ServerTextMessage = Hashes::CRC64Str("ServerTextMessage");
+}
 
 namespace ChatMessages
 {
