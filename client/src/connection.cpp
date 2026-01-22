@@ -45,6 +45,7 @@ namespace Connection
 			{
 				ClientId = message.ClientID();
 				OnConnectionComplete.Invoke(nullptr, ClientId);
+
 			};
 
 // 		RegisterHandler<Unpack::ServerTextMessage>().ProcessFunc = [](const Unpack::ServerTextMessage& message)

@@ -113,14 +113,7 @@ namespace codegen
             }
 
             string OutputType = args[0];
-
             string SchemaDir = args[1];
-            if (string.IsNullOrEmpty(SchemaDir) || !Directory.Exists(SchemaDir))
-            {
-                Console.WriteLine("Input Dir " + SchemaDir + " does not exit");
-                return;
-            }
-
             string OutputDir = args[2];
 
             if (string.IsNullOrEmpty(OutputDir) || !Directory.Exists(OutputDir))
