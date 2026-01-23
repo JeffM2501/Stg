@@ -9,3 +9,13 @@ message ServerTextMessage
     bool IsPrivate = false;
     string Message;
 }
+
+message ClientTextMessage
+{
+    [channel] Chat
+    [handler] ChatHandler
+    u32 TargetId = 0;
+    u32 GroupID = 0;
+    bool IsPrivate = false;
+    string Message;
+}

@@ -6,7 +6,6 @@
 
 #include "connection.h"
 
-#include "message_ids.h"
 #include "messages.h"
 #include "message_channels.h"
 #include "game.h"
@@ -14,8 +13,6 @@
 /*#include "world_info.h"*/
 
 #include "messages/control_messages.h"
-
-#include "messages/chat_group_messages.h"
 
 #include <unordered_map>
 
@@ -30,13 +27,6 @@ namespace Connection
 	Events::EventSource<uint32_t> OnConnected;
 	Events::EventSource<uint32_t> OnConnectionComplete;
 
-// 	std::vector<std::string> ServerChat;
-// 
-// 	std::span<std::string> GetServerChat()
-// 	{
-// 		return std::span<std::string>(ServerChat);
-// 	}
-
 	std::unordered_map<size_t, std::unique_ptr<MessageHandler>> MessageHandlers;
 
 	void RegisterDefaultHandlers()
@@ -47,15 +37,6 @@ namespace Connection
 				OnConnectionComplete.Invoke(nullptr, ClientId);
 
 			};
-
-// 		RegisterHandler<Unpack::ServerTextMessage>().ProcessFunc = [](const Unpack::ServerTextMessage& message)
-// 			{
-// 				auto sender = message.SenderId;
-// 				if (sender == 0)
-// 					ServerChat.push_back(std::string("[Server]: ") + std::string(message.Message));
-// 				else
-// 					ServerChat.push_back(std::string("[Other]: ") + std::string(message.Message));
-// 			};
 	}
 
 	void Init()
