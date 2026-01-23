@@ -203,4 +203,11 @@ namespace ChatGroupMessages
 		void SetIntValue(uint32_t value) { WriteValue<uint32_t>(value, IntValueOffset); }
 	};
 
+	inline void Register()
+	{
+		MessageFactories::RegisterFactory(MessageIDS::ServerAddChatUser, [](ENetPacket* packet) { return std::make_unique<ServerAddChatUser>(packet); });
+		MessageFactories::RegisterFactory(MessageIDS::ServerRemoveChatUser, [](ENetPacket* packet) { return std::make_unique<ServerRemoveChatUser>(packet); });
+		MessageFactories::RegisterFactory(MessageIDS::ServerSetChatGroup, [](ENetPacket* packet) { return std::make_unique<ServerSetChatGroup>(packet); });
+		MessageFactories::RegisterFactory(MessageIDS::TestMessage, [](ENetPacket* packet) { return std::make_unique<TestMessage>(packet); });
+	}
 } //ChatGroupMessages

@@ -96,7 +96,7 @@ namespace ChatSystem
 		return name;
 	}
 
-	void ProcessChatMessage(ConnectedClient& sender, ChatMessages::ServerTextMessage* message)
+	void ProcessChatMessage(ConnectedClient& sender, ChatMessages::ClientTextMessage* message)
 	{
 		// route to everyone else in the channel
 	}
@@ -105,8 +105,8 @@ namespace ChatSystem
 	{
 		switch (buffer->MessageTypeId)
 		{
-		case MessageIDS::ServerTextMessage:
-			ProcessChatMessage(*client, static_cast<ChatMessages::ServerTextMessage*>(buffer.get()));
+		case MessageIDS::ClientTextMessage:
+			ProcessChatMessage(*client, static_cast<ChatMessages::ClientTextMessage*>(buffer.get()));
 			break;
 		}
 	}

@@ -133,4 +133,9 @@ namespace ChatMessages
 		void SetMessage(std::string_view value) { WriteBufferValue(value.data(), value.size(), MessageOffset); }
 	};
 
+	inline void Register()
+	{
+		MessageFactories::RegisterFactory(MessageIDS::ServerTextMessage, [](ENetPacket* packet) { return std::make_unique<ServerTextMessage>(packet); });
+		MessageFactories::RegisterFactory(MessageIDS::ClientTextMessage, [](ENetPacket* packet) { return std::make_unique<ClientTextMessage>(packet); });
+	}
 } //ChatMessages

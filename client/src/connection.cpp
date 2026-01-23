@@ -13,6 +13,8 @@
 /*#include "world_info.h"*/
 
 #include "messages/control_messages.h"
+#include "messages/chat_group_messages.h"
+#include "messages/chat_messages.h"
 
 #include <unordered_map>
 
@@ -29,6 +31,13 @@ namespace Connection
 
 	std::unordered_map<size_t, std::unique_ptr<MessageHandler>> MessageHandlers;
 
+	void RegisterMessages()
+	{
+		ChatGroupMessages::Register();
+		ChatMessages::Register();
+		ControlMessages::Register();
+	}
+
 	void RegisterDefaultHandlers()
 	{
 		RegisterHandler<ControlMessages::SendClientId>().ProcessFunc = [](const ControlMessages::SendClientId& message)
@@ -41,6 +50,8 @@ namespace Connection
 
 	void Init()
 	{
+		RegisterMessages();
+
 		enet_initialize();
 		RegisterDefaultHandlers();
 

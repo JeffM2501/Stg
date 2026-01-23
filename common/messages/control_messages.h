@@ -44,4 +44,8 @@ namespace ControlMessages
 		void SetClientID(uint32_t value) { WriteValue<uint32_t>(value, ClientIDOffset); }
 	};
 
+	inline void Register()
+	{
+		MessageFactories::RegisterFactory(MessageIDS::SendClientId, [](ENetPacket* packet) { return std::make_unique<SendClientId>(packet); });
+	}
 } //ControlMessages

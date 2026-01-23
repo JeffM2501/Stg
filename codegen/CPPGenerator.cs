@@ -241,6 +241,19 @@ namespace codegen
                 }
             }
 
+            if (hasMessages)
+            {
+                textWriter.WriteLine("\tinline void Register()");
+                textWriter.WriteLine("\t{");
+                foreach (var classInfo in classes)
+                {
+                    if (classInfo.ClassType != "message")
+                        continue;
+                    textWriter.WriteLine("\t\tMessageFactories::RegisterFactory(MessageIDS::" + classInfo.Name + ", [](ENetPacket* packet) { return std::make_unique<" + classInfo.Name + ">(packet); });");
+                }
+                textWriter.WriteLine("\t}");
+            }
+
             if (!string.IsNullOrEmpty(namespaceName))
             {
                 textWriter.WriteLine("} //" + namespaceName);

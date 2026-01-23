@@ -13,6 +13,7 @@
 #include "messages.h"
 #include "messages/control_messages.h"
 #include "messages/chat_group_messages.h"
+#include "messages/chat_messages.h"
 
 #include "client_database.h"
 #include "message_router.h"
@@ -39,8 +40,17 @@ void SendClientMessage(ConnectedClient* client, MessageBuffer& message, int chan
 
 Tokens::TokenSource AppTokenSource;
 
+void RegisterMessages()
+{
+	ChatGroupMessages::Register();
+	ChatMessages::Register();
+	ControlMessages::Register();
+}
+
 int main()
 {
+	RegisterMessages();
+
 	ChatSystem::Init();
 
 	if (enet_initialize() != 0)
