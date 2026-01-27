@@ -9,6 +9,7 @@
 #include "messages.h"
 #include "message_channels.h"
 #include "game.h"
+#include "chat_client.h"
 
 /*#include "world_info.h"*/
 
@@ -43,6 +44,7 @@ namespace Connection
 		RegisterHandler<ControlMessages::SendClientId>().ProcessFunc = [](const ControlMessages::SendClientId& message)
 			{
 				ClientId = message.ClientID();
+                ChatClient::SetUserID(ClientId);
 				OnConnectionComplete.Invoke(nullptr, ClientId);
 
 			};
@@ -91,7 +93,22 @@ namespace Connection
 		return ClientId;
 	}
 
-	void ServiceNetwork()
+	void Send(MessageBuffer& message)
+    {
+        if (message.Packet == nullptr)
+            return;
+        enet_uint32 flags = 0;
+        if (message.Reliable)
+            flags |= ENET_PACKET_FLAG_RELIABLE;
+        if (!message.Ordered)
+            flags |= ENET_PACKET_FLAG_UNSEQUENCED;
+
+        message.Packet->flags = flags;
+
+        enet_peer_send(ServerPeer, int(message.Channel), message.Packet);
+    }
+
+    void ServiceNetwork()
 	{
 		if (Client == nullptr)
 			return;

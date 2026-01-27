@@ -1,8 +1,10 @@
 #pragma once
-#include <string_view>
-#include <span>
-#include <string>
 
+//#include "external/fix_win32_compatibility.h"
+
+#include <string_view>
+
+#include "messages.h"
 #include "events.h"
 #include "enet.h"
 
@@ -53,7 +55,8 @@ namespace Connection
 	void ServiceNetwork();
 
 	uint32_t GetClientId();
-/*	std::span<std::string> GetServerChat();*/
+
+	void Send(MessageBuffer& message);
 
 	extern Events::EventSource<uint32_t> OnConnected;
 	extern Events::EventSource<uint32_t> OnConnectionComplete;

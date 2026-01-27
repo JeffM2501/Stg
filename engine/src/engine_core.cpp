@@ -17,7 +17,7 @@ namespace EngineCore
 {
     void Init()
     {
-
+       
     }
 
     float GetDetlaTime()
@@ -38,21 +38,18 @@ namespace EngineCore
         scene.AddTask(SceneTaskLevel::Draw3d, RenderScene3D, true, nullptr);
     }
 
-    std::unique_ptr<Scene> CreateScene()
-    {
-        std::unique_ptr<Scene> scene = std::make_unique<Scene>();
-        scene->Init();
-        RegisterComponents(*scene);
-        RegisterTasks(*scene);
-
-        return scene;
-    }
-
     void Scene::Init()
     {
         RenderTarget = LoadRenderTexture(1920, 1080);
         ViewCamera.fovy = 45;
         ViewCamera.projection = CAMERA_PERSPECTIVE;
+
+        OnInit();
+
+        RegisterComponents(*this);
+        OnRegisterComponents();
+        RegisterTasks(*this);
+        OnRegisterTasks();
     }
 
     void Scene::Resize(int width, int height)

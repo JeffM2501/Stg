@@ -84,8 +84,14 @@ namespace EngineCore
 
         std::unordered_map<SceneTaskLevel, std::vector<std::unique_ptr<SceneTask>>> Tasks;
 
+    protected:
+        virtual void OnInit() {}
+        virtual void OnRegisterTasks() {}
+        virtual void OnRegisterComponents() {}
     public:
         using Ptr = std::unique_ptr<class Scene>;
+
+        virtual ~Scene() {}
 
         void Init();
         void Resize(int width, int height);
@@ -220,5 +226,13 @@ namespace EngineCore
         Camera3D ViewCamera = { 0 };
     };
 
-    std::unique_ptr<Scene> CreateScene();
+    template<class T>
+    inline std::unique_ptr<T> CreateScene()
+    {
+        std::unique_ptr<T> scene = std::make_unique<T>();
+        scene->Init();
+        return scene;
+    }
+
+    inline std::unique_ptr<Scene> CreateScene() { return CreateScene<Scene>();}
 }

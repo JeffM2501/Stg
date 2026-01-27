@@ -15,6 +15,6 @@ namespace ChatSystem
 	void AddUserToGroup(ConnectedClient* client, uint32_t groupID);
 	void RemoveUserFromGroup(ConnectedClient* client, uint32_t groupID);
 
-	void SendServerMessage(std::string_view message, ConnectedClient* target = nullptr);
-	void SendServerMessage(std::string_view message, uint32_t channelID);
+	void SendServerMessage(std::string_view message, ConnectedClient* target = nullptr, uint32_t senderId = 0);
+	void SendServerMessage(std::string_view message, uint32_t channelID, uint32_t senderId = 0);
 }

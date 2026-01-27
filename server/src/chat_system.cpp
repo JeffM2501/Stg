@@ -62,6 +62,12 @@ namespace ChatSystem
 	std::mutex GroupsMutex;
 	std::unordered_map<uint32_t, ChatGroup> ChatGroups;
 
+    void InformUserOfPeer(ClientChatInfo* user, ClientChatInfo* peer)
+    {
+        user->Client->Send<ChatGroupMessages::ServerAddChatUser>(peer->Client->Peer->connectID, peer->Name);
+        user->KnownUsers.insert(peer->Client->Peer->connectID);
+    }
+
 	ClientChatInfo* GetChatInfo(ConnectedClient* client)
 	{
 		auto itr = ClientChatInfos.find(client->Peer->connectID);
@@ -69,6 +75,14 @@ namespace ChatSystem
 			return nullptr;
 		return &itr->second;
 	}
+
+    ClientChatInfo* GetChatInfo(uint32_t clientID)
+    {
+        auto itr = ClientChatInfos.find(clientID);
+        if (itr == ClientChatInfos.end())
+            return nullptr;
+        return &itr->second;
+    }
 
 	uint32_t FindClientIdByName(const std::string& name)
 	{
@@ -99,10 +113,43 @@ namespace ChatSystem
 	void ProcessChatMessage(ConnectedClient& sender, ChatMessages::ClientTextMessage* message)
 	{
 		// route to everyone else in the channel
+        auto* chatClient = GetChatInfo(&sender);
+        if (!chatClient)
+            return;
+
+		if (message->GroupID() == 0)
+		{
+			if (message->TargetId() == 0)
+			{
+                return; // LOG? who his this to?
+			}
+
+			// private message
+
+			auto* targetInfo = GetChatInfo(message->TargetId());
+
+			if (!chatClient->KnownUsers.contains(message->TargetId()))
+			{
+				if (!targetInfo)
+					return; // LOG?
+				InformUserOfPeer(chatClient, targetInfo);
+			}
+
+			SendServerMessage(message->Message(), targetInfo->Client, chatClient->Client->Peer->connectID);
+		}
+
+        // group message
+		if (!chatClient->JoinedGroups.contains(message->GroupID()))
+			return; // LOG?
+		
+        SendServerMessage(message->Message(), message->GroupID(), chatClient->Client->Peer->connectID);
 	}
 
 	void RouteMessage(ConnectedClient* client, std::unique_ptr<MessageBuffer> buffer)
 	{
+		if (buffer == nullptr)
+			return;
+
 		switch (buffer->MessageTypeId)
 		{
 		case MessageIDS::ClientTextMessage:
@@ -239,29 +286,41 @@ namespace ChatSystem
 		chatClient->JoinedGroups.erase(groupID);
 	}
 
-	void SendServerMessage(std::string_view message, ConnectedClient* target)
+    void SendServerMessage(std::string_view message, ConnectedClient* target, uint32_t senderId)
 	{
-		if (target == nullptr)
+		if (target == nullptr) // send to ALL
 		{
 			for (auto [id, clientInfo] : ClientChatInfos)
 			{
-				clientInfo.Client->Send<ChatMessages::ServerTextMessage>(message.data());
+				clientInfo.Client->Send<ChatMessages::ServerTextMessage>(message.data(), senderId);
 			}
 			return;
 		}
 
-		target->Send<ChatMessages::ServerTextMessage>(message.data());
+		target->Send<ChatMessages::ServerTextMessage>(message.data(), senderId);
 	}
 
-	void SendServerMessage(std::string_view message, uint32_t groupID)
+	void SendServerMessage(std::string_view message, uint32_t groupID, uint32_t senderId)
 	{
+		ClientChatInfo* sender = nullptr;
+		
+		if (senderId != 0)
+		{
+			sender = GetChatInfo(senderId);
+			if (!sender)
+				return;
+		}
+
 		auto itr = ChatGroups.find(groupID);
 		if (itr == ChatGroups.end())
 			return;
 
 		for (auto member : itr->second.Members)
 		{
-			member->Client->Send<ChatMessages::ServerTextMessage>(message.data());
+			if (sender && !member->KnownUsers.contains(senderId))
+                InformUserOfPeer(member, sender);
+
+			member->Client->Send<ChatMessages::ServerTextMessage>(message.data(), senderId, groupID);
 		}
 	}
 }

@@ -1,28 +1,46 @@
 #pragma once
 
 #include <cstdint>
-#include <span>
+#include <vector>
 #include <string>
+
+#include "Events.h"
 
 namespace ChatClient
 {
-	struct ChatMessage
+	struct Message
 	{
-		uint64_t SenderId;
+		uint32_t SenderId;
 		std::string Message;
 	};
 
-	struct ChatUser
+	struct Group
+	{
+		uint32_t ID;
+		std::string Name;
+		std::vector<Message> ChatLog;
+	};
+
+	struct User
 	{
 		std::string Name;
-		uint32_t RoomId = uint32_t(-1);
 		bool Active = true;
 	};
 
 	void Init();
+	void Cleanup();
 	void Process();
 
-	ChatUser* GetUserFromId(uint64_t id);
+    void SetUserID(uint32_t id);
+    uint32_t GetUserID();
 
-	std::span<ChatMessage> GetChatLog();
+	User* GetUserFromId(uint32_t id);
+
+	Group* GetGroup(uint32_t id);
+
+    extern Events::EventSource<uint32_t> OnChannelAdded;
+	extern Events::EventSource<uint32_t> OnChannelRemoved;
+
+    void Send(uint32_t groupID, std::string_view message);
+	void SendDirect(uint32_t targetID, std::string_view message);
 }

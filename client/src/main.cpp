@@ -8,9 +8,36 @@
 #include "connection.h"
 #include "chat_client.h"
 
+#include "chat_gui.h"
+
 using namespace EngineCore;
 
-Scene::Ptr GameScene;
+
+class GameScene : public EngineCore::Scene
+{
+	public:
+	virtual ~GameScene() {}
+
+    std::unique_ptr<ChatGUI> ChatInterface;
+
+protected:
+	void OnInit() override
+	{
+	
+	}
+	
+	void OnRegisterComponents() override
+	{
+	}
+	
+	void OnRegisterTasks() override
+	{
+       ChatInterface = std::make_unique<ChatGUI>(Rectangle{ 10, 10, GetScreenWidth()/2.0f, 200 }, this);
+    }
+};
+
+std::unique_ptr<GameScene> pGameScene;
+
 
 void GameInit()
 {
@@ -30,9 +57,9 @@ void GameInit()
 void GameCleanup()
 {
 	Connection::Cleanup();
-	if (GameScene)
+	if (pGameScene)
 	{
-		GameScene.release();
+		pGameScene.release();
 	}
 	CloseWindow();
 }
@@ -42,12 +69,12 @@ bool GameUpdate()
 	Connection::ServiceNetwork();
 	ChatClient::Process();
 
-	if (GameScene)
+	if (pGameScene)
 	{
 		if (IsWindowResized())
-			GameScene->Resize(GetScreenWidth(), GetScreenHeight());
+			pGameScene->Resize(GetScreenWidth(), GetScreenHeight());
 
-		GameScene->Update();
+		pGameScene->Update();
 	}
 
 	return true;
@@ -57,11 +84,11 @@ void GameDraw()
 {
 	ClearBackground(DARKGRAY);
 
-	if (GameScene)
+	if (pGameScene)
 	{
-		GameScene->Draw();
+		pGameScene->Draw();
 
-		RenderTexture& sceneTexture = GameScene->GetRenderTarget();
+		RenderTexture& sceneTexture = pGameScene->GetRenderTarget();
 
 		float scale = float(GetScreenWidth()) / float(sceneTexture.texture.width);
 
@@ -91,7 +118,7 @@ bool Quit()
 
 void OnStageChanged(void* sender, const GameStage& stage)
 {
-	GameScene.release();
+	pGameScene.release();
 
 	if (stage == GameStage::Exiting)
 	{
@@ -99,7 +126,7 @@ void OnStageChanged(void* sender, const GameStage& stage)
 		return;
 	}
 
-	GameScene = EngineCore::CreateScene();
+	pGameScene = EngineCore::CreateScene<GameScene>();
 
 	// common registration
 
@@ -107,7 +134,7 @@ void OnStageChanged(void* sender, const GameStage& stage)
 	{
 	case GameStage::Init:
 		// resource load
-		GameScene->AddTask(SceneTaskLevel::PreUpdate, [](float /*frameTime*/, Scene& /*scene*/)
+		pGameScene->AddTask(SceneTaskLevel::PreUpdate, [](float /*frameTime*/, Scene& /*scene*/)
 			{
 				GameStageManager::SetStage(GameStage::Connecting);
 			});
@@ -118,14 +145,14 @@ void OnStageChanged(void* sender, const GameStage& stage)
 
 	case GameStage::Connecting:
 		Connection::Connect();
-		GameScene->AddTask(SceneTaskLevel::PreUpdate, [](float /*frameTime*/, Scene& /*scene*/)
+		pGameScene->AddTask(SceneTaskLevel::PreUpdate, [](float /*frameTime*/, Scene& /*scene*/)
 			{
 				Connection::ServiceNetwork();
 				if (Connection::IsConnected())
 					GameStageManager::SetStage(GameStage::InGame);
 			});
 
-		GameScene->AddTask(SceneTaskLevel::Draw2d, [](float /*frameTime*/, Scene& /*scene*/)
+		pGameScene->AddTask(SceneTaskLevel::Draw2d, [](float /*frameTime*/, Scene& /*scene*/)
 			{
 				// todo register a proper ui system
 				DrawText("GameStage::Connecting", 10, 10, 20, BLACK);
@@ -135,42 +162,42 @@ void OnStageChanged(void* sender, const GameStage& stage)
 
 	case GameStage::InGame:
 
-		GameScene->AddTask(SceneTaskLevel::PreUpdate, [](float /*frameTime*/, Scene& /*scene*/)
+		pGameScene->AddTask(SceneTaskLevel::PreUpdate, [](float /*frameTime*/, Scene& /*scene*/)
 			{
 				Connection::ServiceNetwork();
 				if (!Connection::IsConnected())
 					GameStageManager::SetStage(GameStage::Exiting);
 			});
 
-		GameScene->AddTask(SceneTaskLevel::Draw2d, [](float /*frameTime*/, Scene& /*scene*/)
-			{
-				DrawText("GameStage::InGame", 10, 40, 20, BLACK);
-				DrawText(TextFormat("Connected to server %u", Connection::GetClientId()), 10, 10, 20, GREEN);
-
-				auto user = ChatClient::GetUserFromId(Connection::GetClientId());
-				if (user)
-					DrawText(TextFormat("Player Name: %s", user->Name.data()), 10, 60, 20, GRAY);
-
-				int y = 370;
-				for (const auto& msg : ChatClient::GetChatLog())
-				{
-					std::string text;
-					auto* user = ChatClient::GetUserFromId(msg.SenderId);
-					if (!user)
-						text += "[server]:";
-					else
-						text += "[" + user->Name + "]:";
-
-					text += msg.Message;
-
-					DrawText(text.c_str(), 10, y, 20, BLACK);
-					y += 30;
-				}
-			});
+ 		pGameScene->AddTask(SceneTaskLevel::Draw2d, [](float /*frameTime*/, Scene& /*scene*/)
+ 			{
+ 				DrawText("GameStage::InGame", 10, 40, 20, BLACK);
+ 				DrawText(TextFormat("Connected to server %u", Connection::GetClientId()), 10, 10, 20, GREEN);
+ 
+ 				auto user = ChatClient::GetUserFromId(Connection::GetClientId());
+ 				if (user)
+ 					DrawText(TextFormat("Player Name: %s", user->Name.data()), 10, 60, 20, GRAY);
+ 
+//  				int y = 370;
+//  				for (const auto& msg : ChatClient::GetChatLog())
+//  				{
+//  					std::string text;
+//  					auto* user = ChatClient::GetUserFromId(msg.SenderId);
+//  					if (!user)
+//  						text += "[server]:";
+//  					else
+//  						text += "[" + user->Name + "]:";
+//  
+//  					text += msg.Message;
+//  
+//  					DrawText(text.c_str(), 10, y, 20, BLACK);
+//  					y += 30;
+//  				}
+ 			});
 		break;
 	}
 
-	GameScene->Resize(GetScreenWidth(), GetScreenHeight());
+	pGameScene->Resize(GetScreenWidth(), GetScreenHeight());
 }
 
 int main()
@@ -189,16 +216,16 @@ int main()
 		BeginDrawing();
 		GameStageManager::ApplyPendingStage();
 
-		if (GameScene)
-			GameScene->BeginFrame();
+		if (pGameScene)
+			pGameScene->BeginFrame();
 
 		if (!GameUpdate())
 			break;
 
 		GameDraw();
 
-		if (GameScene)
-			GameScene->EndFrame();
+		if (pGameScene)
+			pGameScene->EndFrame();
 
 		EndDrawing();
 	}

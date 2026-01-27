@@ -5,17 +5,21 @@
 #include "messages/chat_group_messages.h"
 #include "messages/chat_messages.h"
 
-#include <vector>
 #include <unordered_map>
 
 namespace ChatClient
 {
-	std::vector<ChatMessage> ServerChat;
-	std::unordered_map<uint64_t, ChatUser> ChatUsers;
+	Events::EventSource<uint32_t> OnChannelAdded;
+    Events::EventSource<uint32_t> OnChannelRemoved;
+
+	std::unordered_map<uint32_t, Group> Groups;
+	std::unordered_map<uint32_t, User> ChatUsers;
+
+	uint32_t UserID = 0;
 
 	void HandleServerAddChatUser(const ChatGroupMessages::ServerAddChatUser& message)
 	{
-		ChatUser user;
+		User user;
 		user.Name = message.UserName();
 
 		ChatUsers.insert_or_assign(message.UserID(), user);
@@ -28,30 +32,60 @@ namespace ChatClient
 			itr->second.Active = false;
 	}
 
-	void HandleServerTextMessageUser(const ChatMessages::ServerTextMessage& message)
+	void HandleServerTextMessage(const ChatMessages::ServerTextMessage& message)
 	{
-		ChatMessage chatItem;
-		chatItem.SenderId = message.SenderID();
-		chatItem.Message = message.Message();
+		Message chatMessage;
+		chatMessage.SenderId = message.SenderID();
+		chatMessage.Message = message.Message();
 
-		// filter?
-
-		ServerChat.push_back(chatItem);
+		auto  groupItr = Groups.find(message.GroupID());
+        if (groupItr == Groups.end())
+		{
+			return;
+		}
+		
+        groupItr->second.ChatLog.push_back(chatMessage);
 	}
+
+	void HandleServerSetChatGroup(const ChatGroupMessages::ServerSetChatGroup& message)
+	{
+        Group group;
+        group.ID = message.GroupId();
+        group.Name = message.Name();
+		Groups.insert_or_assign(group.ID, std::move(group));
+		OnChannelAdded.Invoke(nullptr, message.GroupId());
+    }
 
 	void Init()
 	{
+		Cleanup();
+
+        Groups.insert_or_assign(0, Group{ 0, "General", {} });
+		OnChannelAdded.Invoke(nullptr, 0);
+
 		Connection::RegisterHandler<ChatGroupMessages::ServerAddChatUser>().ProcessFunc = HandleServerAddChatUser;
 		Connection::RegisterHandler<ChatGroupMessages::ServerRemoveChatUser>().ProcessFunc = HandleServerRemoveChatUser;
-		Connection::RegisterHandler<ChatMessages::ServerTextMessage>().ProcessFunc = HandleServerTextMessageUser;
+        Connection::RegisterHandler<ChatGroupMessages::ServerSetChatGroup>().ProcessFunc = HandleServerSetChatGroup;
+
+		Connection::RegisterHandler<ChatMessages::ServerTextMessage>().ProcessFunc = HandleServerTextMessage;
 	}
+
+	void Cleanup()
+	{
+		for (auto& [id, group] : Groups)
+		{
+            OnChannelRemoved.Invoke(nullptr, id);
+		}
+		Groups.clear();
+        ChatUsers.clear();
+    }
 
 	void Process()
 	{
 
 	}
 
-	ChatUser* GetUserFromId(uint64_t id)
+	User* GetUserFromId(uint32_t id)
 	{
 		auto itr = ChatUsers.find(id);
 		if (itr != ChatUsers.end())
@@ -60,8 +94,46 @@ namespace ChatClient
 		return nullptr;
 	}
 
-	std::span<ChatMessage> GetChatLog()
+	Group* GetGroup(uint32_t id)
 	{
-		return std::span<ChatMessage>(ServerChat);
+        auto itr = Groups.find(id);
+		if (itr == Groups.end())
+			return nullptr;
+
+        return &(itr->second);
 	}
+
+	void Send(uint32_t groupID, std::string_view message)
+	{
+		auto* group = GetGroup(groupID);
+		if (!group)
+			return;
+
+        group->ChatLog.push_back(Message{ Connection::GetClientId(), std::string(message) });
+
+		ChatMessages::ClientTextMessage msg(message, 0, groupID, false);
+		Connection::Send(msg);
+	}
+
+	void SendDirect(uint32_t targetID, std::string_view message)
+	{
+        auto* group = GetGroup(0);
+        if (!group)
+            return;
+		group->ChatLog.push_back(Message{ Connection::GetClientId(), std::string(message) });
+
+        ChatMessages::ClientTextMessage msg(message, targetID, 0, true);
+        Connection::Send(msg);
+	}
+
+	void SetUserID(uint32_t id)
+	{
+		UserID = id;
+	}
+
+	uint32_t GetUserID()
+	{
+		return UserID;
+	}
+
 }
