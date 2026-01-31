@@ -3,6 +3,7 @@
 
 #include "chat_system.h"
 
+#include "messages/room_messages.h"
 
 using namespace RoomManager;
 
@@ -23,7 +24,13 @@ namespace RoomProcessor
 	void AddPlayer(Room* room, ConnectedClient* player)
 	{
 		// send set room message to player and start the load process
-		player->CurrentRoomID.store(room->ID);
+        player->CurrentRoomID.store(room->ID);
+
+		ChatSystem::AddUserToGroup(player, room->ChatGroupId);
+		player->Send<RoomMessages::AddUserToRoom>(player->Peer->connectID);
+
+
+        room->Players.insert_or_assign(player->Peer->connectID, player);
 	}
 
 	void RemovePlayer(Room* room, ConnectedClient* player)

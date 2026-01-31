@@ -1,0 +1,25 @@
+namespace RoomMessages
+
+message SetRoom
+{
+    [channel] Control
+    [handler] ControllHandler
+    u32 RoomId = 0;
+    u32 Flags = 0;
+    bool IsPrivate = false;
+    string Name;
+}
+
+message AddUserToRoom
+{
+    [channel] Control
+    [handler] ControllHandler
+    u32 UserId = 0;
+}
+
+message RemoveUserFromRoom
+{
+    [channel] Control
+    [handler] ControllHandler
+    u32 UserId = 0;
+}

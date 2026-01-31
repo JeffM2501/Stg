@@ -14,10 +14,12 @@
 #include "messages/control_messages.h"
 #include "messages/chat_group_messages.h"
 #include "messages/chat_messages.h"
+#include "messages/room_messages.h"
 
 #include "client_database.h"
 #include "message_router.h"
 #include "chat_system.h"
+
 
 static int constexpr MaxClients = 64;
 
@@ -45,6 +47,7 @@ void RegisterMessages()
 	ChatGroupMessages::Register();
 	ChatMessages::Register();
 	ControlMessages::Register();
+    RoomMessages::Register();
 }
 
 int main()

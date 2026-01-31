@@ -46,7 +46,6 @@ namespace Connection
 				ClientId = message.ClientID();
                 ChatClient::SetUserID(ClientId);
 				OnConnectionComplete.Invoke(nullptr, ClientId);
-
 			};
 	}
 
