@@ -4,7 +4,7 @@
 
 #include "messages/chat_group_messages.h"
 #include "messages/chat_messages.h"
-
+#include "player_database.h"
 #include <unordered_map>
 
 namespace ChatClient
@@ -13,22 +13,21 @@ namespace ChatClient
     Events::EventSource<uint32_t> OnChannelRemoved;
 
 	std::unordered_map<uint32_t, Group> Groups;
-	std::unordered_map<uint32_t, User> ChatUsers;
 
 	uint32_t UserID = 0;
 
 	void HandleServerAddChatUser(const ChatGroupMessages::ServerAddChatUser& message)
 	{
-		User user;
+		PlayerDatabase::User user;
 		user.Name = message.UserName();
 
-		ChatUsers.insert_or_assign(message.UserID(), user);
+		PlayerDatabase::Users.insert_or_assign(message.UserID(), user);
 	}
 
 	void HandleServerRemoveChatUser(const ChatGroupMessages::ServerRemoveChatUser& message)
 	{
-		auto itr = ChatUsers.find(message.UserID());
-		if (itr != ChatUsers.end())
+		auto itr = PlayerDatabase::Users.find(message.UserID());
+		if (itr != PlayerDatabase::Users.end())
 			itr->second.Active = false;
 	}
 
@@ -77,21 +76,11 @@ namespace ChatClient
             OnChannelRemoved.Invoke(nullptr, id);
 		}
 		Groups.clear();
-        ChatUsers.clear();
     }
 
 	void Process()
 	{
 
-	}
-
-	User* GetUserFromId(uint32_t id)
-	{
-		auto itr = ChatUsers.find(id);
-		if (itr != ChatUsers.end())
-			return &(itr->second);
-
-		return nullptr;
 	}
 
 	Group* GetGroup(uint32_t id)
@@ -135,5 +124,4 @@ namespace ChatClient
 	{
 		return UserID;
 	}
-
 }

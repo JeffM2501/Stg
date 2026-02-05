@@ -6,6 +6,7 @@
 
 #include "Events.h"
 
+
 namespace ChatClient
 {
 	struct Message
@@ -21,12 +22,6 @@ namespace ChatClient
 		std::vector<Message> ChatLog;
 	};
 
-	struct User
-	{
-		std::string Name;
-		bool Active = true;
-	};
-
 	void Init();
 	void Cleanup();
 	void Process();
@@ -34,7 +29,7 @@ namespace ChatClient
     void SetUserID(uint32_t id);
     uint32_t GetUserID();
 
-	User* GetUserFromId(uint32_t id);
+
 
 	Group* GetGroup(uint32_t id);
 
